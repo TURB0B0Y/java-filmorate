@@ -10,8 +10,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -19,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequestMapping("/users")
 @Validated
 public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
+    private final ConcurrentHashMap<Integer, User> users = new ConcurrentHashMap<>();
     private final AtomicInteger userId = new AtomicInteger(0);
 
     @PostMapping
@@ -41,7 +40,7 @@ public class UserController {
             if (user.getName() == null || user.getName().trim().isEmpty())
                 user.setName(user.getLogin());
             if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now()))
-                throw new ValidationException("дата рождения не может быть в будущем");
+                throw new ValidationException("дата рождения должна быть указана и не может быть в будущем");
         } catch (Exception e) {
             log.warn("validation error", e);
             throw e;

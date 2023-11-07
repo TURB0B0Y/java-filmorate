@@ -8,8 +8,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -17,7 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequestMapping("/films")
 public class FilmController {
 
-    private final Map<Integer, Film> films = new HashMap<>();
+    private static final LocalDate AFTER_DATE = LocalDate.of(1895, 11, 28);
+    private static final String AFTER_DATE_STRING = "28 декабря 1895 года";
+
+    private final ConcurrentHashMap<Integer, Film> films = new ConcurrentHashMap<>();
     private final AtomicInteger filmId = new AtomicInteger(0);
 
     @PostMapping
@@ -36,8 +38,8 @@ public class FilmController {
                 throw new ValidationException("Название не может быть пустым");
             if (film.getDescription() != null && film.getDescription().trim().length() > 200)
                 throw new ValidationException("Максимальная длина описания — 200 символов");
-            if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895, 11, 28)))
-                throw new ValidationException("дата релиза — не раньше 28 декабря 1895 года");
+            if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(AFTER_DATE))
+                throw new ValidationException("дата релиза — не раньше " + AFTER_DATE_STRING);
             if (film.getDuration() != null && film.getDuration() < 1)
                 throw new ValidationException("продолжительность фильма должна быть положительной");
         } catch (Exception e) {
