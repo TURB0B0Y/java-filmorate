@@ -55,7 +55,7 @@ public class FilmValidateTests {
         Film film = new Film();
         film.setName("film");
         film.setName("*".repeat(20));
-        film.setReleaseDate(LocalDate.of(1895, 11, 27));
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
         assertThrows(ValidationException.class, () -> FilmController.validateFilm(film));
     }
 
@@ -64,7 +64,7 @@ public class FilmValidateTests {
         Film film = new Film();
         film.setName("film");
         film.setName("*".repeat(20));
-        film.setReleaseDate(LocalDate.of(1895, 11, 27));
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
         film.setDuration(-1);
         assertThrows(ValidationException.class, () -> FilmController.validateFilm(film));
     }
@@ -74,7 +74,7 @@ public class FilmValidateTests {
         Film film = new Film();
         film.setName("film");
         film.setName("*".repeat(20));
-        film.setReleaseDate(LocalDate.of(1895, 11, 27));
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
         film.setDuration(0);
         assertThrows(ValidationException.class, () -> FilmController.validateFilm(film));
     }

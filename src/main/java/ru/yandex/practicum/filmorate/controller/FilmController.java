@@ -16,8 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequestMapping("/films")
 public class FilmController {
 
-    private static final LocalDate AFTER_DATE = LocalDate.of(1895, 11, 28);
-    private static final String AFTER_DATE_STRING = "28 декабря 1895 года";
+    private static final LocalDate AFTER_DATE = LocalDate.of(1895, 12, 28);
 
     private final ConcurrentHashMap<Integer, Film> films = new ConcurrentHashMap<>();
     private final AtomicInteger filmId = new AtomicInteger(0);
@@ -39,7 +38,7 @@ public class FilmController {
             if (film.getDescription() != null && film.getDescription().trim().length() > 200)
                 throw new ValidationException("Максимальная длина описания — 200 символов");
             if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(AFTER_DATE))
-                throw new ValidationException("дата релиза — не раньше " + AFTER_DATE_STRING);
+                throw new ValidationException("дата релиза — не раньше " + AFTER_DATE.toString());
             if (film.getDuration() != null && film.getDuration() < 1)
                 throw new ValidationException("продолжительность фильма должна быть положительной");
         } catch (Exception e) {
