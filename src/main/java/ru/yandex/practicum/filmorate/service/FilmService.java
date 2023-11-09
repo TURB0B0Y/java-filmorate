@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
 
@@ -14,7 +15,7 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class FilmService {
     private final FilmStorage filmStorage;
-    private final UserService userService;
+    private final UserStorage userStorage;
 
     public void addFilm(Film film) {
         filmStorage.addFilm(film);
@@ -28,6 +29,11 @@ public class FilmService {
         return filmStorage.getAll();
     }
 
+    private User getUserById(int userId) {
+        return userStorage.getById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id %s не найден", userId));
+    }
+
     public Film getFilmById(int filmId) {
         Film film = filmStorage.getById(filmId);
         if (film == null)
@@ -37,14 +43,14 @@ public class FilmService {
 
     public void likeFilm(int id, int userId) {
         Film film = getFilmById(id);
-        User user = userService.getUserById(userId); // check user exists
+        User user = getUserById(userId);
         if (!film.getAppraisers().add(user.getId()))
             throw new ConflictException("Пользователь %s уже оценил фильм %s", userId, id);
     }
 
     public void unLikeFilm(int id, int userId) {
         Film film = getFilmById(id);
-        User user = userService.getUserById(userId); // check user exists
+        User user = getUserById(userId);
         if (!film.getAppraisers().remove(user.getId()))
             throw new ConflictException("Пользователь %s еще не оценивал фильм %s", userId, id);
     }
