@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.impl;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.Collection;
@@ -48,17 +47,17 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void addAppraiser(Film film, User user) {
-        film.getAppraisers().add(user.getId());
+    public void addAppraiser(int filmId, int userId) {
+        films.get(filmId).getAppraisers().add(userId);
     }
 
     @Override
-    public boolean isFilmHasAppraiser(Film film, User user) {
-        return film.getAppraisers().contains(user.getId());
+    public boolean isFilmHasAppraiser(int filmId, int userId) {
+        return films.get(filmId).getAppraisers().contains(userId);
     }
 
     @Override
-    public void removeAppraiser(Film film, User user) {
-        film.getAppraisers().remove(user.getId());
+    public void removeAppraiser(int filmId, int userId) {
+        films.get(filmId).getAppraisers().remove(userId);
     }
 }

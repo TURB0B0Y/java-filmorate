@@ -8,7 +8,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class UserFriend {
-    private Integer id;
     private Integer userId;
     private Integer friendId;
     private Integer status;

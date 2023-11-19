@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface UserFriendStorage {
     void save(UserFriend userFriend);
 
-    Optional<UserFriend> findByUserAndFriend(User user, User friend);
+    Optional<UserFriend> findByUserAndFriend(int userId, int friendId);
 
     Collection<UserFriend> findAllByUser(User user);
 

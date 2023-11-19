@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
 
@@ -16,9 +15,9 @@ public interface FilmStorage {
 
     Collection<Film> getPopularFilms(int count);
 
-    void addAppraiser(Film film, User user);
+    void addAppraiser(int filmId, int userId);
 
-    boolean isFilmHasAppraiser(Film film, User user);
+    boolean isFilmHasAppraiser(int filmId, int userId);
 
-    void removeAppraiser(Film film, User user);
+    void removeAppraiser(int filmId, int userId);
 }

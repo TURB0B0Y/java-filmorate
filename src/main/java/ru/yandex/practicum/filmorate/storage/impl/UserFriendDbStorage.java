@@ -4,8 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.UserFriend;
@@ -24,30 +22,25 @@ public class UserFriendDbStorage implements UserFriendStorage {
 
     @Override
     public void save(UserFriend userFriend) {
-        if (userFriend.getId() == null) {
-            KeyHolder keyHolder = new GeneratedKeyHolder();
-            String sqlQuery = "insert into USER_FRIENDS(user_id, friend_id, status) values (:userId, :friendId, :status)";
-            jdbcTemplate.update(
-                    sqlQuery,
-                    new MapSqlParameterSource()
-                            .addValue("userId", userFriend.getUserId())
-                            .addValue("friendId", userFriend.getFriendId())
-                            .addValue("status", userFriend.getStatus()),
-                    keyHolder
-            );
-            userFriend.setId(keyHolder.getKey().intValue());
-        }
+        String sqlQuery = "insert into USER_FRIENDS(user_id, friend_id, status) values (:userId, :friendId, :status)";
+        jdbcTemplate.update(
+                sqlQuery,
+                new MapSqlParameterSource()
+                        .addValue("userId", userFriend.getUserId())
+                        .addValue("friendId", userFriend.getFriendId())
+                        .addValue("status", userFriend.getStatus())
+        );
     }
 
     @Override
-    public Optional<UserFriend> findByUserAndFriend(User user, User friend) {
+    public Optional<UserFriend> findByUserAndFriend(int userId, int friendId) {
         String sqlQuery = "select * from USER_FRIENDS where (user_id = :userId and friend_id = :friendId) or (user_id = :friendId and friend_id = :userId)";
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(
                     sqlQuery,
                     new MapSqlParameterSource()
-                            .addValue("userId", user.getId())
-                            .addValue("friendId", friend.getId()),
+                            .addValue("userId", userId)
+                            .addValue("friendId", friendId),
                     this::mapToUserFriend
             ));
         } catch (EmptyResultDataAccessException e) {
@@ -57,7 +50,6 @@ public class UserFriendDbStorage implements UserFriendStorage {
 
     private UserFriend mapToUserFriend(ResultSet resultSet, int rowNum) throws SQLException {
         UserFriend userFriend = new UserFriend();
-        userFriend.setId(resultSet.getInt("user_friends_id"));
         userFriend.setUserId(resultSet.getInt("user_id"));
         userFriend.setFriendId(resultSet.getInt("friend_id"));
         userFriend.setStatus(resultSet.getInt("status"));
@@ -76,7 +68,8 @@ public class UserFriendDbStorage implements UserFriendStorage {
 
     @Override
     public void delete(UserFriend userFriend) {
-        String sqlQuery = "delete from USER_FRIENDS where user_friends_id = :userId";
-        jdbcTemplate.update(sqlQuery, new MapSqlParameterSource().addValue("userId", userFriend.getId()));
+        String sqlQuery = "delete from USER_FRIENDS where user_id = :userId and friend_id = :friendId";
+        jdbcTemplate.update(sqlQuery, new MapSqlParameterSource("userId", userFriend.getUserId())
+                .addValue("friendId", userFriend.getFriendId()));
     }
 }

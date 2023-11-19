@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -10,7 +11,10 @@ import ru.yandex.practicum.filmorate.model.UserFriend;
 import ru.yandex.practicum.filmorate.storage.UserFriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,23 +53,23 @@ public class UserService {
     public void addFriend(int id, int friendId) {
         if (id == friendId)
             throw new ConflictException("Нельзя добавить себя в друзья");
-        User user = getUserById(id);
-        User friend = getUserById(friendId);
-        if (userFriendStorage.findByUserAndFriend(user, friend).isPresent())
+        if (userFriendStorage.findByUserAndFriend(id, friendId).isPresent())
             throw new ConflictException("Пользователь %s уже дружит с %s", id, friendId);
         UserFriend userFriend = new UserFriend();
-        userFriend.setUserId(user.getId());
-        userFriend.setFriendId(friend.getId());
+        userFriend.setUserId(id);
+        userFriend.setFriendId(friendId);
         userFriend.setStatus(0);
-        userFriendStorage.save(userFriend);
+        try {
+            userFriendStorage.save(userFriend);
+        } catch (DataIntegrityViolationException e) {
+            throw new NotFoundException("Один из указанных пользователей не существует [%s, %s]", id, friendId);
+        }
     }
 
     public void deleteFriend(int id, int friendId) {
         if (id == friendId)
             throw new ConflictException("Нельзя удалить себя из друзья");
-        User user = getUserById(id);
-        User friend = getUserById(friendId);
-        Optional<UserFriend> userFriendOptional = userFriendStorage.findByUserAndFriend(user, friend);
+        Optional<UserFriend> userFriendOptional = userFriendStorage.findByUserAndFriend(id, friendId);
         if (userFriendOptional.isEmpty())
             throw new ConflictException("Запрос в друзья не найден");
         userFriendStorage.delete(userFriendOptional.get());

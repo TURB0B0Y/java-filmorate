@@ -17,7 +17,6 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private Double rate;
     private Set<Integer> appraisers = new HashSet<>();
     private List<Genre> genres = new LinkedList<>();
     private MotionPictureAssociation mpa;

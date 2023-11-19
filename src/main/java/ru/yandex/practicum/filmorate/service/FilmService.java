@@ -32,8 +32,6 @@ public class FilmService {
     public void addFilm(Film film) {
         setMPA(film);
         setGenres(film);
-        if (film.getRate() == null)
-            film.setRate(0D);
         filmStorage.addFilm(film);
     }
 
@@ -53,9 +51,6 @@ public class FilmService {
         filmFromDB.setName(film.getName());
         filmFromDB.setDescription(film.getDescription());
         filmFromDB.setReleaseDate(film.getReleaseDate());
-        filmFromDB.setRate(film.getRate());
-        if (filmFromDB.getRate() == null)
-            filmFromDB.setRate(0D);
         setGenres(film);
         filmFromDB.setGenres(film.getGenres());
         filmStorage.editFilm(filmFromDB);
@@ -86,19 +81,15 @@ public class FilmService {
     }
 
     public void likeFilm(int id, int userId) {
-        Film film = getFilmById(id);
-        User user = getUserById(userId);
-        if (filmStorage.isFilmHasAppraiser(film, user))
+        if (filmStorage.isFilmHasAppraiser(id, userId))
             throw new ConflictException("Пользователь %s уже оценил фильм %s", userId, id);
-        filmStorage.addAppraiser(film, user);
+        filmStorage.addAppraiser(id, userId);
     }
 
     public void unLikeFilm(int id, int userId) {
-        Film film = getFilmById(id);
-        User user = getUserById(userId);
-        if (!filmStorage.isFilmHasAppraiser(film, user))
-            throw new ConflictException("Пользователь %s еще не оценивал фильм %s", userId, id);
-        filmStorage.removeAppraiser(film, user);
+        if (!filmStorage.isFilmHasAppraiser(id, userId))
+            throw new NotFoundException("Пользователь %s еще не оценивал фильм %s", userId, id);
+        filmStorage.removeAppraiser(id, userId);
     }
 
     public Collection<Film> getPopularFilms(int count) {

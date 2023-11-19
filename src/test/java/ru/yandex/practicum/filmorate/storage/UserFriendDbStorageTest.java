@@ -37,7 +37,7 @@ public class UserFriendDbStorageTest {
         userStorage.addUser(friend);
         UserFriend userFriend = new UserFriend(user.getId(), friend.getId());
         userFriendDbStorage.save(userFriend);
-        UserFriend userFriendFromDB = userFriendDbStorage.findByUserAndFriend(user, friend).get();
+        UserFriend userFriendFromDB = userFriendDbStorage.findByUserAndFriend(user.getId(), friend.getId()).get();
         assertThat(userFriendFromDB).isNotNull().usingRecursiveComparison().isEqualTo(userFriend);
     }
 
@@ -50,7 +50,7 @@ public class UserFriendDbStorageTest {
         UserFriend userFriend = new UserFriend(user.getId(), friend.getId());
         userFriendDbStorage.save(userFriend);
         userFriendDbStorage.delete(userFriend);
-        Optional<UserFriend> userFriendFromDB = userFriendDbStorage.findByUserAndFriend(user, friend);
+        Optional<UserFriend> userFriendFromDB = userFriendDbStorage.findByUserAndFriend(user.getId(), friend.getId());
         assertThat(userFriendFromDB).isNotNull();
         assertThat(userFriendFromDB.isEmpty()).isEqualTo(true);
     }

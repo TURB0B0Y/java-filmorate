@@ -21,10 +21,6 @@ public class RandomUtils {
         return ThreadLocalRandom.current().nextInt(min, max);
     }
 
-    public static Double getRandomDouble(int min, int max) {
-        return ThreadLocalRandom.current().nextDouble(min, max);
-    }
-
     public static User getRandomUser() {
         return new User(
                 getRandomString(10) + "@email.ru",
@@ -42,7 +38,6 @@ public class RandomUtils {
         Film film = new Film();
         film.setName(getRandomString(10));
         film.setDescription(getRandomString(10));
-        film.setRate(getRandomDouble(0, 10));
         film.setReleaseDate(LocalDate.of(
                 getRandomIntNumber(1990, 2025),
                 getRandomIntNumber(1, 12),

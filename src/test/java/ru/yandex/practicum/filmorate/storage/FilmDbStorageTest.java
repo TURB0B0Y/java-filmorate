@@ -65,7 +65,7 @@ public class FilmDbStorageTest {
         filmDbStorage.addFilm(film);
         User user = RandomUtils.getRandomUser();
         userDbStorage.addUser(user);
-        filmDbStorage.addAppraiser(film, user);
+        filmDbStorage.addAppraiser(film.getId(), user.getId());
         Film filmFromDB = filmDbStorage.getById(film.getId());
         assertThat(filmFromDB).isNotNull();
         assertThat(filmFromDB.getAppraisers()).isNotNull();
@@ -80,8 +80,8 @@ public class FilmDbStorageTest {
         filmDbStorage.addFilm(film);
         User user = RandomUtils.getRandomUser();
         userDbStorage.addUser(user);
-        filmDbStorage.addAppraiser(film, user);
-        filmDbStorage.removeAppraiser(film, user);
+        filmDbStorage.addAppraiser(film.getId(), user.getId());
+        filmDbStorage.removeAppraiser(film.getId(), user.getId());
         Film filmFromDB = filmDbStorage.getById(film.getId());
         assertThat(filmFromDB).isNotNull();
         assertThat(filmFromDB.getAppraisers()).isNotNull();
@@ -98,7 +98,8 @@ public class FilmDbStorageTest {
         for (int i = 0; i < 10; i++) {
             User user = RandomUtils.getRandomUser();
             userDbStorage.addUser(user);
-            filmDbStorage.addAppraiser(film, user);
+            filmDbStorage.addAppraiser(film.getId(), user.getId());
+            film.getAppraisers().add(user.getId());
         }
         Collection<Film> popularFilms = filmDbStorage.getPopularFilms(1);
         assertThat(popularFilms).isNotNull();
