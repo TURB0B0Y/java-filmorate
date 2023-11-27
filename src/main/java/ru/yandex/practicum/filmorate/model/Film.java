@@ -2,10 +2,11 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import ru.yandex.practicum.filmorate.enums.MotionPictureAssociation;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -17,6 +18,6 @@ public class Film {
     private LocalDate releaseDate;
     private Integer duration;
     private Set<Integer> appraisers = new HashSet<>();
-    private Set<String> genre = new HashSet<>();
+    private List<Genre> genres = new LinkedList<>();
     private MotionPictureAssociation mpa;
 }
