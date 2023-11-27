@@ -45,4 +45,19 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .limit(count)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void addAppraiser(int filmId, int userId) {
+        films.get(filmId).getAppraisers().add(userId);
+    }
+
+    @Override
+    public boolean isFilmHasAppraiser(int filmId, int userId) {
+        return films.get(filmId).getAppraisers().contains(userId);
+    }
+
+    @Override
+    public void removeAppraiser(int filmId, int userId) {
+        films.get(filmId).getAppraisers().remove(userId);
+    }
 }
