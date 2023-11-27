@@ -3,9 +3,9 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -16,7 +16,6 @@ import java.util.Collection;
 @Slf4j
 @RestController
 @RequestMapping("/users")
-@Validated
 @RequiredArgsConstructor
 public class UserController {
 
@@ -89,5 +88,13 @@ public class UserController {
     public Collection<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
         log.info("Запрос на получение списка общих друзей {} {}", id, otherId);
         return userService.getCommonFriends(id, otherId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public Collection<Film> getRecommendations(@PathVariable int id) {
+        log.info("Запрос на получение рекомендации по фильмам для пользователя {}", id);
+        Collection<Film> recommendations = userService.getRecommendations(id);
+        log.info("Рекомендовано {} фильмов", recommendations.size());
+        return recommendations;
     }
 }

@@ -49,8 +49,7 @@ public class FilmController {
     public Film editFilm(@RequestBody Film film) {
         log.info("Запрос на обновление фильма {}", film);
         validateFilm(film);
-        filmService.editFilm(film);
-        return film;
+        return filmService.editFilm(film);
     }
 
     @GetMapping

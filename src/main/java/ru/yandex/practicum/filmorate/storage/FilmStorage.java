@@ -14,4 +14,10 @@ public interface FilmStorage {
     Film getById(int filmId);
 
     Collection<Film> getPopularFilms(int count);
+
+    void addAppraiser(int filmId, int userId);
+
+    boolean isFilmHasAppraiser(int filmId, int userId);
+
+    void removeAppraiser(int filmId, int userId);
 }
