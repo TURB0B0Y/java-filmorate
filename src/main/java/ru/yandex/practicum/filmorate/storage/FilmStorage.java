@@ -23,5 +23,4 @@ public interface FilmStorage {
     void removeAppraiser(int filmId, int userId);
 
     List<Film> moviesSharedWithFriend(int userId, int friendId);
-
 }
