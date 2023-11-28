@@ -81,4 +81,9 @@ public class FilmController {
         log.info("Запрос на получение списка популярных фильмов count={}", count);
         return filmService.getPopularFilms(count);
     }
+
+    @GetMapping("/common")
+    public Collection<Film> moviesSharedWithFriend(@RequestParam int userId, @RequestParam int friendId){
+        return filmService.moviesSharedWithFriend(userId, friendId);
+    }
 }
