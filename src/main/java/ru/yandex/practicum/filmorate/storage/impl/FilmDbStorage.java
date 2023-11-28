@@ -249,23 +249,23 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
-        String sqlQuery = "SELECT f.FILM_ID AS ID ,\n" +
-                "f.name AS name ,\n" +
-                "f.description AS description ,\n" +
-                "f.release_date AS year ,\n" +
-                "f.duration AS duration ,\n" +
-                "f.mpa_id AS mpa_id ,\n" +
-                "mpa.name as mpa_name ,\n" +
-                "d.director_id AS director_id,\n" +
-                "d.name AS director_name,\n" +
-                "COUNT( DISTINCT a.USER_ID) AS likes \n" +
-                "FROM FILMS f left JOIN APPRAISERS a ON a.FILM_ID = f.film_id\n" +
-                "LEFT join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id \n" +
-                "LEFT JOIN film_directors fd ON f.FILM_ID = fd.FILM_ID\n" +
-                "LEFT JOIN DIRECTORS d ON fd.director_id = d.director_id\n" +
-                "WHERE d.director_id = ? \n" +
-                "GROUP BY ID, director_id \n" +
-                "ORDER BY " + sort.name() + " ASC;";
+        String sqlQuery = "SELECT f.FILM_ID AS ID ," +
+                "f.name AS name ," +
+                "f.description AS description ," +
+                "f.release_date AS YEAR ," +
+                "f.duration AS duration ," +
+                "f.mpa_id AS mpa_id ," +
+                "mpa.name as mpa_name ," +
+                "d.director_id AS director_id ," +
+                "d.name AS director_name ," +
+                "COUNT( DISTINCT a.USER_ID) AS likes " +
+                "FROM FILMS f left JOIN APPRAISERS a ON a.FILM_ID = f.film_id " +
+                "LEFT join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id " +
+                "LEFT JOIN film_directors fd ON f.FILM_ID = fd.FILM_ID " +
+                "LEFT JOIN DIRECTORS d ON fd.director_id = d.director_id " +
+                "WHERE d.director_id =? " +
+                "GROUP BY ID, director_id " +
+                "ORDER BY " + sort.name();
 
         List<Film> films = jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> Film.builder()
                         .id(rs.getInt("id"))
