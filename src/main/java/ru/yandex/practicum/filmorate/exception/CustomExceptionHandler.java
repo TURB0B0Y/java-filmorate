@@ -39,6 +39,7 @@ public class CustomExceptionHandler {
     public ResponseDTO<String> handle(ValidationException e) {
         return new ResponseDTO<>(e.getMessage());
     }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseDTO<String> handle(MethodArgumentNotValidException e) {
