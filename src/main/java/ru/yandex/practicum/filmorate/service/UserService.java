@@ -6,8 +6,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.UserFriend;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserFriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -23,6 +25,9 @@ public class UserService {
     @Qualifier("userDbStorage")
     private final UserStorage userStorage;
     private final UserFriendStorage userFriendStorage;
+
+    @Qualifier("filmDbStorage")
+    private final FilmStorage filmStorage;
 
     public Collection<User> getAll() {
         return userStorage.getAll();
@@ -106,5 +111,18 @@ public class UserService {
             return Collections.emptyList();
 
         return userStorage.getUsersById(commonFriends);
+    }
+
+    public Collection<Film> getRecommendations(int userId) {
+        userStorage.getById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id %s не найден", userId));
+
+        Collection<Integer> listFilmId = userStorage.getRecommendations(userId);
+
+        if (listFilmId.isEmpty())
+            return Collections.emptyList();
+
+        Set<Film> films = listFilmId.stream().map(x -> filmStorage.getById(x)).collect(Collectors.toSet());
+        return films;
     }
 }

@@ -44,4 +44,6 @@ public class InMemoryUserStorage implements UserStorage {
     public Collection<User> getUsersById(Collection<Integer> ids) {
         return ids.stream().map(users::get).filter(Objects::nonNull).collect(Collectors.toList());
     }
+    @Override
+    public Collection<Integer> getRecommendations(int userId) {return null;}
 }

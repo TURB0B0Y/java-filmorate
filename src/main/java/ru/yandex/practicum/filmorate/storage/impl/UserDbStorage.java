@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -88,5 +89,19 @@ public class UserDbStorage implements UserStorage {
             return Collections.emptyList();
         String sqlQuery = "select * from USERS where user_id IN (:ids)";
         return jdbcTemplate.query(sqlQuery, new MapSqlParameterSource("ids", ids), this::mapToUser);
+    }
+
+    @Override
+    public Collection<Integer> getRecommendations(int userId) {
+        String sqlQuery = "select film_id from APPRAISERS where user_id = (" + // забираем список ид фильмов для рекомендации
+                "select user_id from APPRAISERS where film_id in (" + // сравниваем лайки др юзеров с нашим
+                    "select film_id from APPRAISERS where user_id = :userId) " +
+                "and user_id <> :userId " + // не сравниваем с самим собой
+                "group by user_id order by count(*) desc limit 1" + // выбираем юзера с мах совпадением
+                ") " +
+                "except " + // исключаем всё, что есть у нашего юзера
+                "select film_id from APPRAISERS where user_id = :userId;";
+        return jdbcTemplate.queryForList(sqlQuery,
+                new MapSqlParameterSource().addValue("userId", userId),Integer.class);
     }
 }

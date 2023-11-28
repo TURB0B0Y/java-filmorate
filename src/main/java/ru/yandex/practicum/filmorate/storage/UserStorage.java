@@ -15,4 +15,6 @@ public interface UserStorage {
     Optional<User> getById(int id);
 
     Collection<User> getUsersById(Collection<Integer> ids);
+
+    Collection<Integer> getRecommendations(int userId);
 }
