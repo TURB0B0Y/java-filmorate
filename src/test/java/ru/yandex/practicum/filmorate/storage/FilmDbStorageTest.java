@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.impl.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.impl.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.impl.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.RandomUtils;
@@ -22,10 +23,12 @@ public class FilmDbStorageTest {
 
     private final FilmDbStorage filmDbStorage;
     private final UserDbStorage userDbStorage;
+    private final DirectorStorage directorStorage;
 
     @Autowired
-    public FilmDbStorageTest(NamedParameterJdbcTemplate jdbcTemplate, DirectorStorage directorStorage) {
-        this.filmDbStorage = new FilmDbStorage(directorStorage,jdbcTemplate);
+    public FilmDbStorageTest(NamedParameterJdbcTemplate jdbcTemplate) {
+        this.directorStorage = new DirectorDbStorage(jdbcTemplate.getJdbcTemplate());
+        this.filmDbStorage = new FilmDbStorage(directorStorage, jdbcTemplate);
         this.userDbStorage = new UserDbStorage(jdbcTemplate);
     }
 
