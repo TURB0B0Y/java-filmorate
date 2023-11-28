@@ -37,7 +37,7 @@ public class ReviewDbStorage implements ReviewStorage {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update("insert into REVIEWS (content, is_positive, user_id, film_id) VALUES (:content, :isPositive, :userId, :filmId)", source, keyHolder);
             review.setReviewId(keyHolder.getKey().intValue());
-            System.out.println("CREATE REVIEW WITH ID "+ review.getReviewId());
+            System.out.println("CREATE REVIEW WITH ID " + review.getReviewId());
         } else {
             jdbcTemplate.update("UPDATE REVIEWS SET content = :content, is_positive = :isPositive where review_id = :reviewId", source);
             return findById(review.getReviewId()).get();
