@@ -13,9 +13,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -91,7 +89,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public Collection<Integer> getRecommendations(int userId) {
+    public List<Integer> getRecommendations(int userId) {
         String sqlQuery = "select film_id from APPRAISERS where user_id = (" + // забираем список ид фильмов для рекомендации
                 "select user_id from APPRAISERS where film_id in (" + // сравниваем лайки др юзеров с нашим
                 "select film_id from APPRAISERS where user_id = :userId) " +

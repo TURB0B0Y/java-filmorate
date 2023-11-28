@@ -13,10 +13,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserFriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -113,16 +110,16 @@ public class UserService {
         return userStorage.getUsersById(commonFriends);
     }
 
-    public Collection<Film> getRecommendations(int userId) {
+    public List<Film> getRecommendations(int userId) {
         userStorage.getById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id %s не найден", userId));
 
-        Collection<Integer> listFilmId = userStorage.getRecommendations(userId);
+        List<Integer> listFilmId = userStorage.getRecommendations(userId);
 
         if (listFilmId.isEmpty())
             return Collections.emptyList();
 
-        Set<Film> films = listFilmId.stream().map(x -> filmStorage.getById(x)).collect(Collectors.toSet());
+        List<Film> films = listFilmId.stream().map(x -> filmStorage.getById(x)).collect(Collectors.toList());
         return films;
     }
 }

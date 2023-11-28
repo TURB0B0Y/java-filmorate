@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,7 +47,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Collection<Integer> getRecommendations(int userId) {
-        return null;
+    public List<Integer> getRecommendations(int userId) {
+        throw new UnsupportedOperationException("Функция пока не реализована");
     }
 }
