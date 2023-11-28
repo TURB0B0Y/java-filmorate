@@ -101,10 +101,11 @@ public class FilmService {
 
     private List<Film> enrichingDirectorsToFilms(Collection<Film> films) {
         List<Film> fullFilms = new ArrayList<>();
-
-        for (Film film : films) {
-            film.setDirectors(directorStorage.getDirectorIdsForFilmId(film.getId()));
-            fullFilms.add(film);
+        if (films != null) {
+            for (Film film : films) {
+                film.setDirectors(directorStorage.getDirectorIdsForFilmId(film.getId()));
+                fullFilms.add(film);
+            }
         }
         return fullFilms;
     }
