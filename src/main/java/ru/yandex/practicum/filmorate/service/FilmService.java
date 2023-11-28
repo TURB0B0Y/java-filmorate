@@ -97,7 +97,7 @@ public class FilmService {
         return filmStorage.getPopularFilms(count);
     }
 
-    public List<Film> moviesSharedWithFriend(int userId, int friendId){
-        return  filmStorage.moviesSharedWithFriend(userId, friendId);
+    public List<Film> moviesSharedWithFriend(int userId, int friendId) {
+        return filmStorage.moviesSharedWithFriend(userId, friendId);
     }
 }
