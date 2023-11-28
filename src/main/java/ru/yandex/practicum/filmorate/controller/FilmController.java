@@ -87,10 +87,10 @@ public class FilmController {
     public Collection<Film> getFilmsByDirector(@PathVariable int directorId,
                                                @RequestParam String sortBy) {
         SortingFilms sort;
-        try{
+        try {
             sort = SortingFilms.valueOf(sortBy.toUpperCase().trim());
-        }catch (IllegalArgumentException e){
-            throw  new ValidationException("Неверно указан параметр");
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Неверно указан параметр");
         }
         return filmService.getSortDirectorsOfFilms(directorId, sort);
     }
