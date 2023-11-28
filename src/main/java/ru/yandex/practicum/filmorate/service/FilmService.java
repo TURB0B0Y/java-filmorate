@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
@@ -95,13 +94,12 @@ public class FilmService {
         return enrichingDirectorsToFilms(filmStorage.getPopularFilms(count));
     }
 
-    public List<Film> getSortDirectorsOfFilms(int director_id, SortingFilms sort) {
-        directorStorage.get(director_id);
-        return enrichingDirectorsToFilms(filmStorage.getSortDirectorsOfFilms(director_id, sort));
+    public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
+        directorStorage.get(directorId);
+        return enrichingDirectorsToFilms(filmStorage.getSortDirectorsOfFilms(directorId, sort));
     }
 
     private List<Film> enrichingDirectorsToFilms(Collection<Film> films) {
-        List<Director> directors = directorStorage.getAll();
         List<Film> fullFilms = new ArrayList<>();
 
         for (Film film : films) {
