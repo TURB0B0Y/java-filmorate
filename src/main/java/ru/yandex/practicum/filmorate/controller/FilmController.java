@@ -86,6 +86,12 @@ public class FilmController {
     @GetMapping("/director/{directorId}")
     public Collection<Film> getFilmsByDirector(@PathVariable int directorId,
                                                @RequestParam String sortBy) {
-        return filmService.getSortDirectorsOfFilms(directorId, SortingFilms.valueOf(sortBy.toUpperCase()));
+        SortingFilms sort;
+        try{
+            sort = SortingFilms.valueOf(sortBy.toUpperCase().trim());
+        }catch (IllegalArgumentException e){
+            throw  new ValidationException("Неверно указан параметр");
+        }
+        return filmService.getSortDirectorsOfFilms(directorId, sort);
     }
 }
