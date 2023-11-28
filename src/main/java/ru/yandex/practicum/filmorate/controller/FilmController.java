@@ -83,7 +83,7 @@ public class FilmController {
     }
 
     @GetMapping("/common")
-    public Collection<Film> moviesSharedWithFriend(@RequestParam int userId, @RequestParam int friendId){
+    public Collection<Film> moviesSharedWithFriend(@RequestParam int userId, @RequestParam int friendId) {
         return filmService.moviesSharedWithFriend(userId, friendId);
     }
 }
