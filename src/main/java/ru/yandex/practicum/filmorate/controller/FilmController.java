@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Locale;
 
 @Slf4j
 @RestController
@@ -86,6 +87,6 @@ public class FilmController {
     @GetMapping("/director/{directorId}")
     public Collection<Film> getFilmsByDirector(@PathVariable int directorId,
                                                @RequestParam String sortBy) {
-        return filmService.getSortDirectorsOfFilms(directorId, SortingFilms.valueOf(sortBy));
+        return filmService.getSortDirectorsOfFilms(directorId, SortingFilms.valueOf(sortBy.toUpperCase()));
     }
 }
