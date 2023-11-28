@@ -24,8 +24,8 @@ public class FilmDbStorageTest {
     private final UserDbStorage userDbStorage;
 
     @Autowired
-    public FilmDbStorageTest(NamedParameterJdbcTemplate jdbcTemplate) {
-        this.filmDbStorage = new FilmDbStorage(jdbcTemplate);
+    public FilmDbStorageTest(NamedParameterJdbcTemplate jdbcTemplate, DirectorStorage directorStorage) {
+        this.filmDbStorage = new FilmDbStorage(directorStorage,jdbcTemplate);
         this.userDbStorage = new UserDbStorage(jdbcTemplate);
     }
 

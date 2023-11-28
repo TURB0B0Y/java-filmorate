@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -59,5 +61,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void removeAppraiser(int filmId, int userId) {
         films.get(filmId).getAppraisers().remove(userId);
+    }
+
+    @Override
+    public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
+        throw new UnsupportedOperationException();
     }
 }
