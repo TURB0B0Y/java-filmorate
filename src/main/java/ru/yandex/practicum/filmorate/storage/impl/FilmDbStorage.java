@@ -249,10 +249,14 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
+        String sortName = sort.name();
+        if (sort.equals(SortingFilms.YEAR)) {
+            sortName = sortName + "S";
+        }
         String sqlQuery = "SELECT f.FILM_ID AS ID ," +
                 "f.name AS name ," +
                 "f.description AS description ," +
-                "f.release_date AS YEAR ," +
+                "f.release_date AS years ," +
                 "f.duration AS duration ," +
                 "f.mpa_id AS mpa_id ," +
                 "mpa.name as mpa_name ," +
@@ -265,13 +269,13 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN DIRECTORS d ON fd.director_id = d.director_id " +
                 "WHERE d.director_id =? " +
                 "GROUP BY ID, director_id " +
-                "ORDER BY " + sort.name();
+                "ORDER BY " + sortName + " ASC";
 
         List<Film> films = jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> Film.builder()
                         .id(rs.getInt("id"))
                         .name(rs.getString("name"))
                         .description(rs.getString("description"))
-                        .releaseDate(rs.getTimestamp("year").toLocalDateTime().toLocalDate())
+                        .releaseDate(rs.getTimestamp("years").toLocalDateTime().toLocalDate())
                         .duration(rs.getInt("duration"))
                         .mpa(MotionPictureAssociation.builder()
                                 .id(rs.getInt("mpa_id"))
