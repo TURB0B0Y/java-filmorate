@@ -6,7 +6,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
 import ru.yandex.practicum.filmorate.storage.*;
 
 import java.util.ArrayList;

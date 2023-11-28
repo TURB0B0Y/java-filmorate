@@ -32,6 +32,8 @@ public class DirectorService {
         return storage.update(data);
     }
 
-    public void delete(int id) { storage.delete(id);}
+    public void delete(int id) {
+        storage.delete(id);
+    }
 
 }

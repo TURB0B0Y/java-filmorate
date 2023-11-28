@@ -137,7 +137,7 @@ public class FilmDbStorage implements FilmStorage {
         );
         for (Map.Entry<Integer, Genre> entry : filmGenres) {
             Film film = filmsMap.get(entry.getKey());
-            if(film.getGenres() == null){
+            if (film.getGenres() == null) {
                 film.setGenres(new ArrayList<>());
             }
             film.getGenres().add(entry.getValue());
@@ -149,7 +149,7 @@ public class FilmDbStorage implements FilmStorage {
         );
         for (Map.Entry<Integer, Integer> entry : filmAppraisers) {
             Film film = filmsMap.get(entry.getKey());
-            if(film.getAppraisers() == null){
+            if (film.getAppraisers() == null) {
                 film.setAppraisers(new HashSet<>());
             }
             film.getAppraisers().add(entry.getValue());
@@ -248,7 +248,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort){
+    public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
         String sqlQuery = "SELECT f.FILM_ID AS ID ,\n" +
                 "f.name AS name ,\n" +
                 "f.description AS description ,\n" +
@@ -265,7 +265,7 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN DIRECTORS d ON fd.director_id = d.director_id\n" +
                 "WHERE d.director_id = ? \n" +
                 "GROUP BY ID, director_id \n" +
-                "ORDER BY "+sort.name()+" ASC;";
+                "ORDER BY " + sort.name() + " ASC;";
 
         List<Film> films = jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> Film.builder()
                         .id(rs.getInt("id"))
@@ -280,7 +280,7 @@ public class FilmDbStorage implements FilmStorage {
                         .build(),
 
                 directorId
-                );
+        );
         fillFilms(films);
         return films;
     }
