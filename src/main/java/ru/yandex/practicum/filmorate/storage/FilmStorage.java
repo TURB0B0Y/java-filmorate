@@ -24,4 +24,6 @@ public interface FilmStorage {
     void removeAppraiser(int filmId, int userId);
 
     List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort);
+
+    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by);
 }

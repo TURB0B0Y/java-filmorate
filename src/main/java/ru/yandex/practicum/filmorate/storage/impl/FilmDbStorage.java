@@ -10,6 +10,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.enums.SortingFilms;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -288,4 +289,50 @@ public class FilmDbStorage implements FilmStorage {
         fillFilms(films);
         return films;
     }
+    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by){
+        List<Film> films;
+        String querySyntax = "%" + query + "%";
+        String sqlLastQuery = "SELECT \n" +
+                "f.FILM_ID AS film_id,\n" +
+                "\tf.NAME AS film_name,\n" +
+                "\tf.DESCRIPTION AS film_description,\n" +
+                "\tf.RELEASE_DATE AS film_release_date,\n" +
+                "\tf.DURATION AS film_duration,\n" +
+                "\tf.MPA_ID AS mpa_id,\n" +
+                "\tMPA.NAME AS mpa_name,\n" +
+                "\td.NAME AS director\n" +
+                "FROM FILMS f \n" +
+                "LEFT JOIN MOTION_PICTURE_ASSOCIATIONS mpa ON f.MPA_ID = MPA.MPA_ID\n" +
+                "LEFT JOIN FILM_DIRECTORS fd ON f.FILM_ID = fd.FILM_ID \n" +
+                "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID \n" +
+                "LEFT JOIN APPRAISERS a ON f.FILM_ID = a.FILM_ID ";
+        if (by.contains("title") && by.contains("director")){
+            String sqlQuery = sqlLastQuery + " WHERE film_name = ? AND director = ? " +
+                    "ORDER BY a.film_id DESC";
+            films = jdbcTemplate.query(sqlQuery,new MapSqlParameterSource()
+                    .addValue("?", querySyntax)
+                    .addValue("?", querySyntax),
+                    this::mapToFilm);
+        } else if (by.contains("director")) {
+            String sqlQuery = sqlLastQuery + "WHERE d.NAME = ? " +
+                    "ORDER BY a.FILM_ID DESC";
+            films = jdbcTemplate.query(sqlQuery,new MapSqlParameterSource()
+                            .addValue("?", querySyntax),
+                    this::mapToFilm);
+        } else if (by.contains("title")) {
+            String sqlQuery = sqlLastQuery + "WHERE f.NAME = ? " +
+                    "ORDER BY a.film_id DESC";
+            films = jdbcTemplate.query(sqlQuery,
+                    new MapSqlParameterSource()
+                            .addValue("?", querySyntax),
+                    this::mapToFilm);
+
+        }
+        else {
+            throw new NotFoundException("не нашли");
+        }
+
+        return films;
+    }
+
 }

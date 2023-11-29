@@ -110,6 +110,9 @@ public class FilmService {
         }
         return fullFilms;
     }
+    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by){
+        return filmStorage.searchMovieByTitleAndDirector(query, by);
+    }
 
 
 }

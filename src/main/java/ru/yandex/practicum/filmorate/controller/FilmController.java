@@ -11,6 +11,8 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -93,5 +95,11 @@ public class FilmController {
             throw new ValidationException("Неверно указан параметр");
         }
         return filmService.getSortDirectorsOfFilms(directorId, sort);
+    }
+
+    @GetMapping("/search")
+    public Collection<Film> getSearchResults(@RequestParam String query,
+                                             @RequestParam(defaultValue = "title") Optional<List<String>> by){
+        return filmService.searchMovieByTitleAndDirector(query, by.get());
     }
 }
