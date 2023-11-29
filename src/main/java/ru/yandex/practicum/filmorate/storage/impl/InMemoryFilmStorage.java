@@ -64,6 +64,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
-        return null;
+        throw new NotFoundException("Выбран не тот метод для работы с БД");
     }
 }
