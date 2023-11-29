@@ -111,8 +111,13 @@ public class FilmService {
         return fullFilms;
     }
 
-
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
         return filmStorage.moviesSharedWithFriend(userId, friendId);
+    }
+
+    public void deleteFilmById(int id) {
+        if (filmStorage.getById(id) == null)
+            throw new NotFoundException("Фильм %s не существует, удаление невозможно", id);
+        filmStorage.deleteFilmById(id);
     }
 }

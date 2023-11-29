@@ -18,4 +18,6 @@ public interface UserStorage {
     Collection<User> getUsersById(Collection<Integer> ids);
 
     List<Integer> getRecommendations(int userId);
+
+    void deleteUserById(int userId);
 }

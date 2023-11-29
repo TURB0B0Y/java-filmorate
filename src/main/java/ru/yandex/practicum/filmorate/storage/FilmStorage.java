@@ -26,4 +26,6 @@ public interface FilmStorage {
     List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort);
 
     List<Film> moviesSharedWithFriend(int userId, int friendId);
+
+    void deleteFilmById(int id);
 }
