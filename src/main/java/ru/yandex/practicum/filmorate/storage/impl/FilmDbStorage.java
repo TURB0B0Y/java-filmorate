@@ -333,7 +333,7 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN APPRAISERS a ON f.FILM_ID = a.FILM_ID ";
         if (by.contains("title") && by.contains("director")) {
             String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME)  LIKE LOWER(:title)" +
-                    " AND LOWER(d.NAME) LIKE LOWER(:director) " +
+                    " OR LOWER(d.NAME) LIKE LOWER(:director) " +
                     "ORDER BY a.FILM_ID DESC";
             films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
                             .addValue("title", querySyntax)
