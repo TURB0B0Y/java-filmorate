@@ -92,11 +92,13 @@ public class FilmController {
         } catch (IllegalArgumentException e) {
             throw new ValidationException("Неверно указан параметр");
         }
+        log.info("запрос на получение сортированного списка фильмов по {} ", sortBy);
         return filmService.getSortDirectorsOfFilms(directorId, sort);
     }
 
     @GetMapping("/common")
     public Collection<Film> moviesSharedWithFriend(@RequestParam int userId, @RequestParam int friendId) {
+        log.info("запрос на получение общих фильмов с другом");
         return filmService.moviesSharedWithFriend(userId, friendId);
     }
 }
