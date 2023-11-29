@@ -122,4 +122,10 @@ public class UserService {
         List<Film> films = listFilmId.stream().map(x -> filmStorage.getById(x)).collect(Collectors.toList());
         return films;
     }
+
+    public void deleteUserById(int id) {
+        userStorage.getById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователя %s не существует, удаление невозможно", id));
+        userStorage.deleteUserById(id);
+    }
 }

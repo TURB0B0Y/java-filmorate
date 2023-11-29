@@ -302,4 +302,10 @@ public class FilmDbStorage implements FilmStorage {
                         .addValue("friendId", friendId), this::mapToFilm);
         return films;
     }
+
+    @Override
+    public void deleteFilmById(int id) {
+        String sqlQuery = "delete from FILMS where film_id = :filmId";
+        jdbcTemplate.update(sqlQuery, new MapSqlParameterSource().addValue("filmId", id));
+    }
 }
