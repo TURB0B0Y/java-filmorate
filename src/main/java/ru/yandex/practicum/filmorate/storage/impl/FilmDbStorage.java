@@ -310,12 +310,12 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID \n" +
                 "LEFT JOIN APPRAISERS a ON f.FILM_ID = a.FILM_ID ";
         if (by.contains("title") && by.contains("director")) {
-            String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME)  LIKE LOWER( :title)" +
-                    " AND WHERE LOWER(d.NAME) LIKE LOWER( :director) " +
+            String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME)  LIKE LOWER(:title)" +
+                    " AND LOWER(d.NAME) LIKE LOWER(:director) " +
                     "ORDER BY a.FILM_ID DESC";
             films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
-                            .addValue("?", querySyntax)
-                            .addValue("?", querySyntax),
+                            .addValue("title", querySyntax)
+                            .addValue("director", querySyntax),
                     this::mapToFilm);
             log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
         } else if (by.contains("director")) {
