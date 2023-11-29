@@ -9,7 +9,10 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
-import ru.yandex.practicum.filmorate.storage.*;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.MotionPictureAssociationStorage;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,8 +26,6 @@ public class FilmService {
     @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
 
-    @Qualifier("userDbStorage")
-    private final UserStorage userStorage;
     private final GenreStorage genreStorage;
     private final MotionPictureAssociationStorage motionPictureAssociationStorage;
     @Qualifier("directorDbStorage")
