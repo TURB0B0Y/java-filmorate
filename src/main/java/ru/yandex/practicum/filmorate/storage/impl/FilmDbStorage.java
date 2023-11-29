@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class FilmDbStorage implements FilmStorage {
 
     @Qualifier("directorDbStorage")
@@ -289,7 +291,8 @@ public class FilmDbStorage implements FilmStorage {
         fillFilms(films);
         return films;
     }
-    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by){
+
+    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
         List<Film> films;
         String querySyntax = "%" + query + "%";
         String sqlLastQuery = "SELECT \n" +
@@ -306,32 +309,33 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN FILM_DIRECTORS fd ON f.FILM_ID = fd.FILM_ID \n" +
                 "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID \n" +
                 "LEFT JOIN APPRAISERS a ON f.FILM_ID = a.FILM_ID ";
-        if (by.contains("title") && by.contains("director")){
-            String sqlQuery = sqlLastQuery + " WHERE film_name = ? AND director = ? " +
-                    "ORDER BY a.film_id DESC";
-            films = jdbcTemplate.query(sqlQuery,new MapSqlParameterSource()
-                    .addValue("?", querySyntax)
-                    .addValue("?", querySyntax),
-                    this::mapToFilm);
-        } else if (by.contains("director")) {
-            String sqlQuery = sqlLastQuery + "WHERE d.NAME = ? " +
+        if (by.contains("title") && by.contains("director")) {
+            String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME)  LIKE LOWER( :title)" +
+                    " AND WHERE LOWER(d.NAME) LIKE LOWER( :director) " +
                     "ORDER BY a.FILM_ID DESC";
-            films = jdbcTemplate.query(sqlQuery,new MapSqlParameterSource()
+            films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
+                            .addValue("?", querySyntax)
                             .addValue("?", querySyntax),
                     this::mapToFilm);
+            log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
+        } else if (by.contains("director")) {
+            String sqlQuery = sqlLastQuery + "WHERE LOWER(d.NAME) LIKE LOWER( :director) " +
+                    "ORDER BY a.FILM_ID DESC";
+            films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
+                            .addValue("director", querySyntax),
+                    this::mapToFilm);
+            log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
         } else if (by.contains("title")) {
-            String sqlQuery = sqlLastQuery + "WHERE f.NAME = ? " +
-                    "ORDER BY a.film_id DESC";
+            String sqlQuery = sqlLastQuery + "WHERE LOWER(f.NAME)  LIKE LOWER( :title) " +
+                    "ORDER BY a.FILM_ID DESC";
             films = jdbcTemplate.query(sqlQuery,
                     new MapSqlParameterSource()
-                            .addValue("?", querySyntax),
+                            .addValue("title", querySyntax),
                     this::mapToFilm);
-
-        }
-        else {
+            log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
+        } else {
             throw new NotFoundException("не нашли");
         }
-
         return films;
     }
 
