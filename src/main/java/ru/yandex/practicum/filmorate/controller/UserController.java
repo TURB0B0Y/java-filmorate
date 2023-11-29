@@ -98,4 +98,10 @@ public class UserController {
         log.info("Рекомендовано {} фильмов", recommendations.size());
         return recommendations;
     }
+
+    @DeleteMapping("/{userId}")
+    public void deleteUserById(@PathVariable int userId) {
+        log.info("Удаляется пользователь {}", userId);
+        userService.deleteUserById(userId);
+    }
 }

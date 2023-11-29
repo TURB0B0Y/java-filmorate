@@ -101,4 +101,10 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.queryForList(sqlQuery,
                 new MapSqlParameterSource().addValue("userId", userId),Integer.class);
     }
+
+    @Override
+    public void deleteUserById(int id) {
+        String sqlQuery = "delete from USERS where user_id = :userId";
+        jdbcTemplate.update(sqlQuery, new MapSqlParameterSource().addValue("userId", id));
+    }
 }

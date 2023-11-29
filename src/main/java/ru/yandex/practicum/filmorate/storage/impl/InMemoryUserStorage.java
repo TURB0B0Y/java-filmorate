@@ -50,4 +50,9 @@ public class InMemoryUserStorage implements UserStorage {
     public List<Integer> getRecommendations(int userId) {
         throw new UnsupportedOperationException("Функция пока не реализована");
     }
+
+    @Override
+    public void deleteUserById(int id) {
+        throw new UnsupportedOperationException("Функция пока не реализована");
+    }
 }

@@ -101,4 +101,10 @@ public class FilmController {
         log.info("запрос на получение общих фильмов с другом");
         return filmService.moviesSharedWithFriend(userId, friendId);
     }
+
+    @DeleteMapping("/{filmId}")
+    public void deleteUserById(@PathVariable int filmId) {
+        log.info("Удаляется пользователь {}", filmId);
+        filmService.deleteFilmById(filmId);
+    }
 }

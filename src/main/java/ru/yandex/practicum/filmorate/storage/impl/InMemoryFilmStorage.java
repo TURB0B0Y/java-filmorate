@@ -72,4 +72,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
         throw new NotFoundException("Выбран не тот метод для работы с БД");
     }
+
+    @Override
+    public void deleteFilmById(int id) {
+        throw new UnsupportedOperationException("Функция пока не реализована");
+    }
 }
