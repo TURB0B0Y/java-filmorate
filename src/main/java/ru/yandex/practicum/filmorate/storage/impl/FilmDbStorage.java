@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -8,9 +9,12 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.ResultSet;
@@ -22,6 +26,9 @@ import java.util.stream.Collectors;
 @Repository
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
+
+    @Qualifier("directorDbStorage")
+    private final DirectorStorage directorStorage;
 
     private static final String BASE_SELECT = "select" +
             " f.film_id as film_id," +
@@ -59,6 +66,7 @@ public class FilmDbStorage implements FilmStorage {
                                 .addValue("filmId", film.getId()))
                         .toArray(SqlParameterSource[]::new)
         );
+        saveDirectorByFilm(film);
     }
 
     @Override
@@ -95,6 +103,17 @@ public class FilmDbStorage implements FilmStorage {
                 actualGenreIds.stream().map(genreId -> new MapSqlParameterSource("genreId", genreId)
                         .addValue("filmId", film.getId())).toArray(SqlParameterSource[]::new)
         );
+        saveDirectorByFilm(film);
+    }
+
+    private void saveDirectorByFilm(Film data) {
+        List<Director> directors = data.getDirectors();
+        directorStorage.deleteAllDirectorByFilm(data.getId());
+        if (directors != null) {
+            for (Director director : directors) {
+                directorStorage.createDirectorByFilm(director.getId(), data.getId());
+            }
+        }
     }
 
     @Override
@@ -118,6 +137,9 @@ public class FilmDbStorage implements FilmStorage {
         );
         for (Map.Entry<Integer, Genre> entry : filmGenres) {
             Film film = filmsMap.get(entry.getKey());
+            if (film.getGenres() == null) {
+                film.setGenres(new ArrayList<>());
+            }
             film.getGenres().add(entry.getValue());
         }
         List<Map.Entry<Integer, Integer>> filmAppraisers = jdbcTemplate.query(
@@ -127,6 +149,9 @@ public class FilmDbStorage implements FilmStorage {
         );
         for (Map.Entry<Integer, Integer> entry : filmAppraisers) {
             Film film = filmsMap.get(entry.getKey());
+            if (film.getAppraisers() == null) {
+                film.setAppraisers(new HashSet<>());
+            }
             film.getAppraisers().add(entry.getValue());
         }
     }
@@ -220,5 +245,47 @@ public class FilmDbStorage implements FilmStorage {
                         .addValue("userId", userId)
                         .addValue("filmId", filmId)
         );
+    }
+
+    @Override
+    public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
+        String sortName = sort.name();
+        if (sort.equals(SortingFilms.YEAR)) {
+            sortName = sortName + "S";
+        }
+        String sqlQuery = "SELECT f.FILM_ID AS ID ," +
+                "f.name AS name ," +
+                "f.description AS description ," +
+                "f.release_date AS years ," +
+                "f.duration AS duration ," +
+                "f.mpa_id AS mpa_id ," +
+                "mpa.name as mpa_name ," +
+                "d.director_id AS director_id ," +
+                "d.name AS director_name ," +
+                "COUNT( DISTINCT a.USER_ID) AS likes " +
+                "FROM FILMS f left JOIN APPRAISERS a ON a.FILM_ID = f.film_id " +
+                "LEFT join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id " +
+                "LEFT JOIN film_directors fd ON f.FILM_ID = fd.FILM_ID " +
+                "LEFT JOIN DIRECTORS d ON fd.director_id = d.director_id " +
+                "WHERE d.director_id =? " +
+                "GROUP BY ID, director_id " +
+                "ORDER BY " + sortName + " ASC";
+
+        List<Film> films = jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> Film.builder()
+                        .id(rs.getInt("id"))
+                        .name(rs.getString("name"))
+                        .description(rs.getString("description"))
+                        .releaseDate(rs.getTimestamp("years").toLocalDateTime().toLocalDate())
+                        .duration(rs.getInt("duration"))
+                        .mpa(MotionPictureAssociation.builder()
+                                .id(rs.getInt("mpa_id"))
+                                .name(rs.getString("mpa_name"))
+                                .build())
+                        .build(),
+
+                directorId
+        );
+        fillFilms(films);
+        return films;
     }
 }
