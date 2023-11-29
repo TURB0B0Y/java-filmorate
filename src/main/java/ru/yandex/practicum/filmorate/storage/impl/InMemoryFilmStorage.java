@@ -67,4 +67,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public List<Film> moviesSharedWithFriend(int userId, int friendId) {
+        throw new NotFoundException("Выбран не тот метод для работы с БД");
+    }
 }

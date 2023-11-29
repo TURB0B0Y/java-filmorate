@@ -288,4 +288,18 @@ public class FilmDbStorage implements FilmStorage {
         fillFilms(films);
         return films;
     }
+
+    @Override
+    public List<Film> moviesSharedWithFriend(int userId, int friendId) {
+        String sqlQuery = BASE_SELECT +
+                " FROM FILMS f JOIN MOTION_PICTURE_ASSOCIATIONS mpa ON f.MPA_ID=MPA.MPA_ID " +
+                "WHERE FILM_ID IN (SELECT FILM_ID FROM APPRAISERS a2" +
+                " WHERE USER_ID = :userId AND FILM_ID IN (SELECT FILM_ID  FROM APPRAISERS a " +
+                "WHERE USER_ID = :friendId ORDER BY FILM_ID DESC))";
+        List<Film> films = jdbcTemplate.query(sqlQuery,
+                new MapSqlParameterSource()
+                        .addValue("userId", userId)
+                        .addValue("friendId", friendId), this::mapToFilm);
+        return films;
+    }
 }
