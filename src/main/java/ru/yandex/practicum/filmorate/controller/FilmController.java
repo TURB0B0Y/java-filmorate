@@ -11,6 +11,8 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -106,5 +108,11 @@ public class FilmController {
     public void deleteUserById(@PathVariable int filmId) {
         log.info("Удаляется пользователь {}", filmId);
         filmService.deleteFilmById(filmId);
+    }
+
+    @GetMapping("/search")
+    public Collection<Film> getSearchResults(@RequestParam String query,
+                                             @RequestParam(defaultValue = "title") Optional<List<String>> by){
+        return filmService.searchMovieByTitleAndDirector(query, by.get());
     }
 }

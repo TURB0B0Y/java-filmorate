@@ -77,4 +77,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     public void deleteFilmById(int id) {
         throw new UnsupportedOperationException("Функция пока не реализована");
     }
+
+    @Override
+    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
+        throw new NotFoundException("");
+    }
 }

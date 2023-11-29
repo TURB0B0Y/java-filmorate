@@ -28,4 +28,6 @@ public interface FilmStorage {
     List<Film> moviesSharedWithFriend(int userId, int friendId);
 
     void deleteFilmById(int id);
+
+    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by);
 }
