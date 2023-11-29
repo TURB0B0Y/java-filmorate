@@ -314,6 +314,7 @@ public class FilmDbStorage implements FilmStorage {
     public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by){
 
     public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
+    public List<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
         List<Film> films;
         String querySyntax = "%" + query + "%";
         String sqlLastQuery = "SELECT \n" +
@@ -355,7 +356,7 @@ public class FilmDbStorage implements FilmStorage {
                     this::mapToFilm);
             log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
         } else {
-            throw new NotFoundException("не нашли");
+            throw new NotFoundException("не верно заданы параметры поиска");
         }
         return films;
     }
