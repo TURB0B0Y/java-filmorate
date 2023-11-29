@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -80,6 +81,18 @@ public class FilmController {
     public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
         log.info("Запрос на получение списка популярных фильмов count={}", count);
         return filmService.getPopularFilms(count);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> getFilmsByDirector(@PathVariable int directorId,
+                                               @RequestParam String sortBy) {
+        SortingFilms sort;
+        try {
+            sort = SortingFilms.valueOf(sortBy.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Неверно указан параметр");
+        }
+        return filmService.getSortDirectorsOfFilms(directorId, sort);
     }
 
     @GetMapping("/common")

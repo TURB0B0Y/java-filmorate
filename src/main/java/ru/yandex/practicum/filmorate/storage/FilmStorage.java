@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
@@ -21,6 +22,8 @@ public interface FilmStorage {
     boolean isFilmHasAppraiser(int filmId, int userId);
 
     void removeAppraiser(int filmId, int userId);
+
+    List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort);
 
     List<Film> moviesSharedWithFriend(int userId, int friendId);
 }

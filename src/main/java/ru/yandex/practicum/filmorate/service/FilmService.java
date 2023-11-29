@@ -3,17 +3,18 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MotionPictureAssociationStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -25,10 +26,10 @@ public class FilmService {
     @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
 
-    @Qualifier("userDbStorage")
-    private final UserStorage userStorage;
     private final GenreStorage genreStorage;
     private final MotionPictureAssociationStorage motionPictureAssociationStorage;
+    @Qualifier("directorDbStorage")
+    private final DirectorStorage directorStorage;
 
     public void addFilm(Film film) {
         setMPA(film);
@@ -54,6 +55,7 @@ public class FilmService {
         filmFromDB.setReleaseDate(film.getReleaseDate());
         setGenres(film);
         filmFromDB.setGenres(film.getGenres());
+        filmFromDB.setDirectors(film.getDirectors());
         filmStorage.editFilm(filmFromDB);
         return filmFromDB;
     }
@@ -66,18 +68,14 @@ public class FilmService {
     }
 
     public Collection<Film> getAll() {
-        return filmStorage.getAll();
-    }
-
-    private User getUserById(int userId) {
-        return userStorage.getById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id %s не найден", userId));
+        return enrichingDirectorsToFilms(filmStorage.getAll());
     }
 
     public Film getFilmById(int filmId) {
         Film film = filmStorage.getById(filmId);
         if (film == null)
             throw new NotFoundException("Фильм с id %s не найден", filmId);
+        film.setDirectors(directorStorage.getDirectorIdsForFilmId(filmId));
         return film;
     }
 
@@ -94,8 +92,26 @@ public class FilmService {
     }
 
     public Collection<Film> getPopularFilms(int count) {
-        return filmStorage.getPopularFilms(count);
+        return enrichingDirectorsToFilms(filmStorage.getPopularFilms(count));
     }
+
+    public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
+        directorStorage.get(directorId);
+        return enrichingDirectorsToFilms(filmStorage.getSortDirectorsOfFilms(directorId, sort));
+    }
+
+    private List<Film> enrichingDirectorsToFilms(Collection<Film> films) {
+        List<Film> fullFilms = new ArrayList<>();
+        if (films != null) {
+            for (Film film : films) {
+                film.setDirectors(directorStorage.getDirectorIdsForFilmId(film.getId()));
+                fullFilms.add(film);
+            }
+        }
+        return fullFilms;
+    }
+
+
 
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
         return filmStorage.moviesSharedWithFriend(userId, friendId);
