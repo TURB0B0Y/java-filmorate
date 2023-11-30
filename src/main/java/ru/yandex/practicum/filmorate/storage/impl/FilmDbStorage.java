@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -8,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class FilmDbStorage implements FilmStorage {
 
     private static final String BASE_SELECT = "select" +
@@ -31,6 +34,9 @@ public class FilmDbStorage implements FilmStorage {
             " f.duration as film_duration," +
             " mpa.mpa_id as mpa_id," +
             " mpa.name as mpa_name";
+
+    private static final String LIKES_EXIST_QUERY = "SELECT FILM_ID, COUNT(USER_ID) AS count " +
+            "FROM APPRAISERS a GROUP BY FILM_ID";
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
     @Override
@@ -178,16 +184,6 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getPopularFilms(int count) {
-        String sqlQuery = BASE_SELECT + ",(select count(1) from APPRAISERS a where a.film_id = f.film_id) as filmAppraisers " +
-                "from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id " +
-                "order by filmAppraisers desc limit :count";
-        List<Film> films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource("count", count), this::mapToFilm);
-        fillFilms(films);
-        return films;
-    }
-
-    @Override
     public void addAppraiser(int filmId, int userId) {
         String sqlQuery = "insert into APPRAISERS (user_id, film_id) values (:userId, :filmId)";
         jdbcTemplate.update(
@@ -220,5 +216,131 @@ public class FilmDbStorage implements FilmStorage {
                         .addValue("userId", userId)
                         .addValue("filmId", filmId)
         );
+    }
+
+    @Override
+    public Collection<Film> getPopularFilms(int count) {
+        String sqlQuery = BASE_SELECT + ",(select count(1) from APPRAISERS a where a.film_id = f.film_id) " +
+                "as filmAppraisers from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id " +
+                "order by filmAppraisers desc limit :count";
+        List<Film> films = jdbcTemplate.query(
+                sqlQuery,
+                new MapSqlParameterSource("count", count),
+                this::mapToFilm);
+        fillFilms(films);
+        System.out.println("films = " + films);
+        return films;
+    }
+
+    /**
+     * метод получения данных о всех популярных фильмах (по кол-ву лайков, по жанру и по году)
+     */
+    @Override
+    public List<Film> getPopularFilmsByGenreAndYear(int count, int genreId, int year) {
+        String sqlQuery = null;
+        String genreIdExistQuery = "select count(name) from GENRES where genre_id = :genreId";
+
+        if (genreId == 0 && year == 0) {
+            log.info("Запрос на получение списка популярных фильмов count={}", count);
+            sqlQuery = BASE_SELECT + ",(select count(1) from APPRAISERS a where a.film_id = f.film_id)" +
+                    " as filmAppraisers from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id " +
+                    "order by filmAppraisers desc limit :count";
+        }
+
+        if (genreId != 0 && year == 0) {
+            log.info("Запрос на получение списка популярных фильмов по жанру={} : count={} ", genreId, count);
+            if ((jdbcTemplate.queryForObject(genreIdExistQuery,
+                    Collections.singletonMap("genreId", genreId), Integer.class) == null) ||
+                    jdbcTemplate.queryForObject(genreIdExistQuery,
+                            Collections.singletonMap("genreId", genreId), Integer.class) == 0) {
+                throw new NotFoundException("Жанра с ID = %s не существует", genreId);
+            }
+            if ((jdbcTemplate.queryForList(LIKES_EXIST_QUERY, new MapSqlParameterSource(), Integer.class)).isEmpty()) {
+                sqlQuery = "SELECT m.*, fg.GENRE_ID " +
+                        "FROM FILM_GENRES fg " +
+                        "INNER JOIN (" + BASE_SELECT +
+                        " from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id) as m " +
+                        "ON fg.FILM_ID =m.FILM_ID " +
+                        "WHERE fg.GENRE_ID = :genreId " +
+                        "ORDER BY m.FILM_ID DESC " +
+                        "LIMIT 10";
+            } else {
+                sqlQuery = "SELECT m.*, fg.GENRE_ID, ab.count " +
+                        "FROM FILM_GENRES fg " +
+                        "INNER JOIN (SELECT FILM_ID, COUNT(USER_ID) AS count " +
+                        "FROM APPRAISERS a " +
+                        "GROUP BY FILM_ID) as ab ON fg.FILM_ID =ab.FILM_ID " +
+                        "INNER JOIN (" + BASE_SELECT +
+                        " from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id) as m " +
+                        "ON fg.FILM_ID =m.FILM_ID " +
+                        "WHERE fg.GENRE_ID = :genreId " +
+                        "ORDER BY ab.count DESC " +
+                        "LIMIT :count";
+            }
+        }
+
+        if (genreId == 0 && year != 0) {
+            log.info("Запрос на получение списка популярных фильмов по году={} : count={} ", year, count);
+            if ((jdbcTemplate.queryForList(LIKES_EXIST_QUERY, new MapSqlParameterSource(), Integer.class)).isEmpty()) {
+                sqlQuery = BASE_SELECT + " from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id= f.mpa_id " +
+                        "WHERE EXTRACT(YEAR FROM f.release_date)= :year " +
+                        "ORDER BY f.film_id " +
+                        "LIMIT :count";
+            } else {
+                sqlQuery = "SELECT m.*, fg.GENRE_ID, ab.count " +
+                        "FROM FILM_GENRES fg " +
+                        "INNER JOIN (SELECT FILM_ID, COUNT(USER_ID) AS count " +
+                        "FROM APPRAISERS a " +
+                        "GROUP BY FILM_ID) as ab ON fg.FILM_ID =ab.FILM_ID " +
+                        "INNER JOIN (" + BASE_SELECT +
+                        " from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id) as m " +
+                        "ON fg.FILM_ID =m.FILM_ID " +
+                        "WHERE EXTRACT(YEAR FROM m.film_release_date)= :year " +
+                        "ORDER BY m.FILM_ID " +
+                        "LIMIT :count";
+            }
+        }
+
+        if (genreId != 0 && year != 0) {
+            log.info("Запрос на получение списка популярных фильмов по году={} и жанру={} : count={}",
+                    year, genreId, count);
+            if ((jdbcTemplate.queryForObject(genreIdExistQuery,
+                    Collections.singletonMap("genreId", genreId), Integer.class) == null) ||
+                    jdbcTemplate.queryForObject(genreIdExistQuery,
+                            Collections.singletonMap("genreId", genreId), Integer.class) == 0) {
+                throw new NotFoundException("Жанра с ID = %s не существует", genreId);
+            }
+            if ((jdbcTemplate.queryForList(LIKES_EXIST_QUERY, new MapSqlParameterSource(), Integer.class)).isEmpty()) {
+                sqlQuery = "SELECT m.*, fg.GENRE_ID " +
+                        "FROM FILM_GENRES fg " +
+                        "INNER JOIN (" + BASE_SELECT +
+                        " from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id) as m " +
+                        "ON fg.FILM_ID =m.FILM_ID " +
+                        "WHERE fg.GENRE_ID = :genreId AND EXTRACT(YEAR FROM m.film_release_date)= :year " +
+                        "ORDER BY m.FILM_ID, m.film_release_date DESC " +
+                        "LIMIT :count";
+            } else {
+                sqlQuery = "SELECT m.*, fg.GENRE_ID, ab.count " +
+                        "FROM FILM_GENRES fg " +
+                        "INNER JOIN (SELECT FILM_ID, COUNT(USER_ID) AS count " +
+                        "FROM APPRAISERS a " +
+                        "GROUP BY FILM_ID) as ab ON fg.FILM_ID =ab.FILM_ID " +
+                        "INNER JOIN (" + BASE_SELECT +
+                        " from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id) as m " +
+                        "ON fg.FILM_ID =m.FILM_ID " +
+                        "WHERE fg.GENRE_ID = :genreId AND EXTRACT(YEAR FROM m.film_release_date)= :year " +
+                        "ORDER BY ab.count DESC " +
+                        "LIMIT :count";
+            }
+        }
+        List<Film> films = jdbcTemplate.query(
+                sqlQuery, new MapSqlParameterSource()
+                        .addValue("genreId", genreId)
+                        .addValue("year", year)
+                        .addValue("count", count),
+                this::mapToFilm
+        );
+        fillFilms(films);
+        return films;
     }
 }

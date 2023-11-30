@@ -9,7 +9,9 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -28,6 +30,7 @@ public class FilmController {
         filmService.addFilm(film);
         return film;
     }
+
 
     public static void validateFilm(Film film) {
         try {
@@ -66,7 +69,7 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void likeFilm(@PathVariable int id, @PathVariable int userId) {
-        log.info("Посталвен лайк фильму {} от пользователя {}", id, userId);
+        log.info("Поставлен лайк фильму {} от пользователя {}", id, userId);
         filmService.likeFilm(id, userId);
     }
 
@@ -77,8 +80,17 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        log.info("Запрос на получение списка популярных фильмов count={}", count);
-        return filmService.getPopularFilms(count);
+    public List<Film> getPopularFilms(@RequestParam(value = "count", defaultValue = "10") Integer count,
+                                      @RequestParam(value = "genreId", defaultValue = "0") Integer genreId,
+                                      @RequestParam(value = "year", defaultValue = "0") Integer year) {
+        if (genreId == 0 && year == 0) {
+            log.info("Запрос на получение списка популярных фильмов count={}", count);
+            return new ArrayList<>(filmService.getPopularFilms(count));
+        } else {
+            log.info("Запрос на получение списка популярных фильмов count={} по году и жанру", count);
+            return filmService.getPopularFilmsByGenreAndYear(count, genreId, year);
+        }
+
     }
 }
+

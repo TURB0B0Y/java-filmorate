@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -59,5 +60,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void removeAppraiser(int filmId, int userId) {
         films.get(filmId).getAppraisers().remove(userId);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByGenreAndYear(int count, int genreId, int year) {
+        return null;
     }
 }

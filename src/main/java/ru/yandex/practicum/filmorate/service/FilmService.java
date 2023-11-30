@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.storage.MotionPictureAssociationStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -94,5 +95,9 @@ public class FilmService {
 
     public Collection<Film> getPopularFilms(int count) {
         return filmStorage.getPopularFilms(count);
+    }
+
+    public List<Film> getPopularFilmsByGenreAndYear(int count, int genreId, int year) {
+        return filmStorage.getPopularFilmsByGenreAndYear(count, genreId, year);
     }
 }
