@@ -69,8 +69,13 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
+        throw new UnsupportedOperationException("Функция пока не реализована");
+    }
+
+    @Override
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
-        throw new NotFoundException("Выбран не тот метод для работы с БД");
+        throw new UnsupportedOperationException("Функция пока не реализована");
     }
 
     @Override
