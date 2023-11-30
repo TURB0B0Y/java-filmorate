@@ -115,6 +115,7 @@ public class FilmService {
         return enrichingDirectorsToFilms(filmStorage.searchMovieByTitleAndDirector(query, by));
     }
 
+
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
         return filmStorage.moviesSharedWithFriend(userId, friendId);
     }
