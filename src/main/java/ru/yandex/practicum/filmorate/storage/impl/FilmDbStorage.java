@@ -25,6 +25,8 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 @Repository
 @RequiredArgsConstructor
 @Slf4j
@@ -32,7 +34,6 @@ public class FilmDbStorage implements FilmStorage {
 
     @Qualifier("directorDbStorage")
     private final DirectorStorage directorStorage;
-
     private static final String BASE_SELECT = "select" +
             " f.film_id as film_id," +
             " f.name as film_name," +
@@ -131,7 +132,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private void fillFilms(List<Film> films) {
         Map<Integer, Film> filmsMap = films.stream().collect(Collectors.toMap(Film::getId, film -> film, (t, t2) -> t));
-        List<Integer> filmIds = films.stream().map(Film::getId).collect(Collectors.toList());
+        List<Integer> filmIds = films.stream().map(Film::getId).collect(toList());
         List<Map.Entry<Integer, Genre>> filmGenres = jdbcTemplate.query(
                 "select fg.film_id as film_id, g.genre_id as genre_id, g.name as genre_name from FILM_GENRES fg " +
                         "join GENRES g on g.genre_id = fg.genre_id where fg.film_id in (:filmIds)",
@@ -318,19 +319,22 @@ public class FilmDbStorage implements FilmStorage {
         List<Film> films;
         String querySyntax = "%" + query + "%";
         String sqlLastQuery = "SELECT \n" +
-                "f.FILM_ID AS film_id,\n" +
+                " f.FILM_ID AS film_id,\n" +
                 "\tf.NAME AS film_name,\n" +
                 "\tf.DESCRIPTION AS film_description,\n" +
                 "\tf.RELEASE_DATE AS film_release_date,\n" +
                 "\tf.DURATION AS film_duration,\n" +
+                "\tg.NAME AS genres,\n" +
                 "\tf.MPA_ID AS mpa_id,\n" +
                 "\tMPA.NAME AS mpa_name,\n" +
-                "\td.NAME AS director\n" +
+                "\td.NAME AS directors\n" +
                 "FROM FILMS f \n" +
                 "LEFT JOIN MOTION_PICTURE_ASSOCIATIONS mpa ON f.MPA_ID = MPA.MPA_ID\n" +
                 "LEFT JOIN FILM_DIRECTORS fd ON f.FILM_ID = fd.FILM_ID \n" +
                 "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID \n" +
-                "LEFT JOIN APPRAISERS a ON f.FILM_ID = a.FILM_ID ";
+                "LEFT JOIN APPRAISERS a ON f.FILM_ID = a.FILM_ID\n" +
+                "LEFT JOIN FILM_GENRES fg ON f.FILM_ID = fg.FILM_ID \n" +
+                "LEFT JOIN GENRES g ON fg.GENRE_ID = g.GENRE_ID ";
         if (by.contains("title") && by.contains("director")) {
             String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME)  LIKE LOWER(:title)" +
                     " OR LOWER(d.NAME) LIKE LOWER(:director) " +
@@ -358,6 +362,7 @@ public class FilmDbStorage implements FilmStorage {
         } else {
             throw new NotFoundException("не верно заданы параметры поиска");
         }
+        fillFilms(films);
         return films;
     }
 
