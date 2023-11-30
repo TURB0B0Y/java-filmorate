@@ -365,55 +365,5 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlQuery, new MapSqlParameterSource().addValue("filmId", id));
     }
 
-    public List<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
-        List<Film> films;
-        String querySyntax = "%" + query + "%";
-        String sqlLastQuery = "SELECT \n" +
-                " f.FILM_ID AS film_id,\n" +
-                "\tf.NAME AS film_name,\n" +
-                "\tf.DESCRIPTION AS film_description,\n" +
-                "\tf.RELEASE_DATE AS film_release_date,\n" +
-                "\tf.DURATION AS film_duration,\n" +
-                "\tg.NAME AS genres,\n" +
-                "\tf.MPA_ID AS mpa_id,\n" +
-                "\tMPA.NAME AS mpa_name,\n" +
-                "\td.NAME AS directors\n" +
-                "FROM FILMS f \n" +
-                "LEFT JOIN MOTION_PICTURE_ASSOCIATIONS mpa ON f.MPA_ID = MPA.MPA_ID\n" +
-                "LEFT JOIN FILM_DIRECTORS fd ON f.FILM_ID = fd.FILM_ID \n" +
-                "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID \n" +
-                "LEFT JOIN APPRAISERS a ON f.FILM_ID = a.FILM_ID\n" +
-                "LEFT JOIN FILM_GENRES fg ON f.FILM_ID = fg.FILM_ID \n" +
-                "LEFT JOIN GENRES g ON fg.GENRE_ID = g.GENRE_ID ";
-        if (by.contains("title") && by.contains("director")) {
-            String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME)  LIKE LOWER(:title)" +
-                    " OR LOWER(d.NAME) LIKE LOWER(:director) " +
-                    "ORDER BY a.FILM_ID DESC";
-            films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
-                            .addValue("title", querySyntax)
-                            .addValue("director", querySyntax),
-                    this::mapToFilm);
-            log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
-        } else if (by.contains("director")) {
-            String sqlQuery = sqlLastQuery + "WHERE LOWER(d.NAME) LIKE LOWER( :director) " +
-                    "ORDER BY a.FILM_ID DESC";
-            films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
-                            .addValue("director", querySyntax),
-                    this::mapToFilm);
-            log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
-        } else if (by.contains("title")) {
-            String sqlQuery = sqlLastQuery + "WHERE LOWER(f.NAME)  LIKE LOWER( :title) " +
-                    "ORDER BY a.FILM_ID DESC";
-            films = jdbcTemplate.query(sqlQuery,
-                    new MapSqlParameterSource()
-                            .addValue("title", querySyntax),
-                    this::mapToFilm);
-            log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
-        } else {
-            throw new NotFoundException("не верно заданы параметры поиска");
-        }
-        fillFilms(films);
-        return films;
-    }
 
 }
