@@ -312,9 +312,7 @@ public class FilmDbStorage implements FilmStorage {
         String sqlQuery = "delete from FILMS where film_id = :filmId";
         jdbcTemplate.update(sqlQuery, new MapSqlParameterSource().addValue("filmId", id));
     }
-    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by){
 
-    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
     public List<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
         List<Film> films;
         String querySyntax = "%" + query + "%";
