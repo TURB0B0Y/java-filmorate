@@ -30,19 +30,23 @@ public class ReviewDbStorage implements ReviewStorage {
                 .addValue("isPositive", review.getIsPositive() ? 1 : 0);
         // Если id указан, создание записи, иначе обновление
         if (review.getReviewId() == null) {
-            if (jdbcTemplate.queryForObject("select count(1) as c from USERS where user_id = :userId", new MapSqlParameterSource("userId", review.getUserId()), (rs, rowNum) -> rs.getInt("c")) == 0)
+            if (jdbcTemplate.queryForObject("select count(1) as c from USERS where user_id = :userId",
+                    new MapSqlParameterSource("userId", review.getUserId()), (rs, rowNum) -> rs.getInt("c")) == 0)
                 throw new NotFoundException("Пользоваетль с id %s не найден", review.getUserId());
-            if (jdbcTemplate.queryForObject("select count(1) as c from FILMS where film_id = :filmId", new MapSqlParameterSource("filmId", review.getFilmId()), (rs, rowNum) -> rs.getInt("c")) == 0)
+            if (jdbcTemplate.queryForObject("select count(1) as c from FILMS where film_id = :filmId",
+                    new MapSqlParameterSource("filmId", review.getFilmId()), (rs, rowNum) -> rs.getInt("c")) == 0)
                 throw new NotFoundException("Фильм с id %s не найден", review.getFilmId());
+            String sqlIns = "insert into REVIEWS (content, is_positive, user_id, film_id) " +
+                    "VALUES (:content, :isPositive, :userId, :filmId)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
-            jdbcTemplate.update("insert into REVIEWS (content, is_positive, user_id, film_id) VALUES (:content, :isPositive, :userId, :filmId)", source, keyHolder);
+            jdbcTemplate.update(sqlIns, source, keyHolder);
             review.setReviewId(keyHolder.getKey().intValue());
-            System.out.println("CREATE REVIEW WITH ID " + review.getReviewId());
+            return review;
         } else {
-            jdbcTemplate.update("UPDATE REVIEWS SET content = :content, is_positive = :isPositive where review_id = :reviewId", source);
+            String sqlUpd = "UPDATE REVIEWS SET content = :content, is_positive = :isPositive where review_id = :reviewId";
+            jdbcTemplate.update(sqlUpd, source);
             return findById(review.getReviewId()).get();
         }
-        return review;
     }
 
     @Override
@@ -58,7 +62,8 @@ public class ReviewDbStorage implements ReviewStorage {
         // SELECT SUM суммирует все лайки, тк для дизлайка значение rate -1, а для лайка 1, в итоге получается рейтинг отзыва
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(
-                    "SELECT *, (SELECT SUM(rl.rate) FROM REVIEW_LIKES rl where rl.review_id = r.review_id) as useful FROM REVIEWS r where r.review_id = :reviewId",
+                    "SELECT *, (SELECT SUM(rl.rate) FROM REVIEW_LIKES rl where rl.review_id = r.review_id) " +
+                            "as useful FROM REVIEWS r where r.review_id = :reviewId",
                     new MapSqlParameterSource("reviewId", reviewId),
                     this::mapToReview
             ));
@@ -83,7 +88,9 @@ public class ReviewDbStorage implements ReviewStorage {
     public List<Review> findAllByFilm(Integer filmId, Integer count) {
         // SELECT SUM суммирует все лайки, тк для дизлайка значение rate -1, а для лайка 1, в итоге получается рейтинг отзыва
         return jdbcTemplate.query(
-                "SELECT *, (SELECT IFNULL (SUM(rl.rate), 0) FROM REVIEW_LIKES rl where rl.review_id = r.review_id) AS useful FROM REVIEWS r where r.film_id = :filmId ORDER BY useful desc limit :limit",
+                "SELECT *, (SELECT IFNULL (SUM(rl.rate), 0) FROM REVIEW_LIKES rl " +
+                        "where rl.review_id = r.review_id) AS useful FROM REVIEWS r where r.film_id = :filmId " +
+                        "ORDER BY useful desc limit :limit",
                 new MapSqlParameterSource("limit", count).addValue("filmId", filmId),
                 this::mapToReview
         );
@@ -93,7 +100,8 @@ public class ReviewDbStorage implements ReviewStorage {
     public List<Review> findAll(Integer count) {
         // SELECT SUM суммирует все лайки, тк для дизлайка значение rate -1, а для лайка 1, в итоге получается рейтинг отзыва
         return jdbcTemplate.query(
-                "SELECT *, (SELECT IFNULL (SUM(rl.rate), 0)  FROM REVIEW_LIKES rl where rl.review_id = r.review_id) as useful FROM REVIEWS r ORDER BY useful desc limit :limit",
+                "SELECT *, (SELECT IFNULL (SUM(rl.rate), 0)  FROM REVIEW_LIKES rl " +
+                        "where rl.review_id = r.review_id) as useful FROM REVIEWS r ORDER BY useful desc limit :limit",
                 new MapSqlParameterSource("limit", count),
                 this::mapToReview
         );

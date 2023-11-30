@@ -4,11 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -17,11 +21,16 @@ public class ReviewService {
 
     private final ReviewStorage reviewStorage;
 
+    private final FeedStorage feedStorage;
+
     @Transactional
     public Review addReview(Review review) {
         review.setReviewId(null);
         try {
-            return reviewStorage.save(review);
+            Review createdReview = reviewStorage.save(review);
+            feedStorage.createFeed(review.getUserId(), review.getReviewId(), EventType.REVIEW,
+                    Operation.ADD, Instant.now().toEpochMilli());
+            return createdReview;
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("Отзыв уже существует");
         }
@@ -30,15 +39,22 @@ public class ReviewService {
     @Transactional
     public Review editReview(Review review) {
         try {
-            return reviewStorage.save(review);
+            Review savedReview = reviewStorage.save(review);
+            feedStorage.createFeed(savedReview.getUserId(), savedReview.getReviewId(), EventType.REVIEW,
+                    Operation.UPDATE, Instant.now().toEpochMilli());
+            return savedReview;
         } catch (DataIntegrityViolationException e) {
-            throw new NotFoundException("Отзыв id %s не существует, либо Фильм или Пользоваетль не существует", review.getReviewId());
+            throw new NotFoundException("Отзыв id %s не существует, либо Фильм или Пользоваетль не существует",
+                    review.getReviewId());
         }
     }
 
     @Transactional
     public void deleteReview(Integer reviewId) {
+        Review review = reviewStorage.findById(reviewId)
+                .orElseThrow(() -> new NotFoundException("Отзыва %s не существует, удаление невозможно", reviewId));
         reviewStorage.deleteById(reviewId);
+        feedStorage.createFeed(review.getUserId(), reviewId, EventType.REVIEW, Operation.REMOVE, Instant.now().toEpochMilli());
     }
 
     @Transactional(readOnly = true)

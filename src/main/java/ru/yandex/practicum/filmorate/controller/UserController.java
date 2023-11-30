@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -13,6 +14,7 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -103,5 +105,11 @@ public class UserController {
     public void deleteUserById(@PathVariable int userId) {
         log.info("Удаляется пользователь {}", userId);
         userService.deleteUserById(userId);
+    }
+
+    @GetMapping("/{id}/feed")
+    public Set<Feed> getFeeds(@PathVariable int id) {
+        log.info("Запрос на ленту событий пользователя {}", id);
+        return userService.getFeeds(id);
     }
 }
