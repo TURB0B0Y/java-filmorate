@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -11,6 +12,8 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+
 import java.util.List;
 
 @Slf4j
@@ -92,5 +95,36 @@ public class FilmController {
         }
 
     }
-}
 
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> getFilmsByDirector(@PathVariable int directorId,
+                                               @RequestParam String sortBy) {
+        SortingFilms sort;
+        try {
+            sort = SortingFilms.valueOf(sortBy.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Неверно указан параметр");
+        }
+        log.info("запрос на получение сортированного списка фильмов по {} ", sortBy);
+        return filmService.getSortDirectorsOfFilms(directorId, sort);
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> moviesSharedWithFriend(@RequestParam int userId, @RequestParam int friendId) {
+        log.info("запрос на получение общих фильмов с другом");
+        return filmService.moviesSharedWithFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{filmId}")
+    public void deleteUserById(@PathVariable int filmId) {
+        log.info("Удаляется пользователь {}", filmId);
+        filmService.deleteFilmById(filmId);
+    }
+
+    @GetMapping("/search")
+    public Collection<Film> getSearchResults(@RequestParam String query,
+                                             @RequestParam(defaultValue = "title") List<String> by) {
+        return filmService.searchMovieByTitleAndDirector(query, by);
+    }
+
+}

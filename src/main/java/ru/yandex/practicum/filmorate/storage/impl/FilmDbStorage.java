@@ -2,6 +2,8 @@ package ru.yandex.practicum.filmorate.storage.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -9,10 +11,14 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.ResultSet;
@@ -21,11 +27,15 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 @Repository
 @RequiredArgsConstructor
 @Slf4j
 public class FilmDbStorage implements FilmStorage {
 
+    @Qualifier("directorDbStorage")
+    private final DirectorStorage directorStorage;
     private static final String BASE_SELECT = "select" +
             " f.film_id as film_id," +
             " f.name as film_name," +
@@ -65,6 +75,7 @@ public class FilmDbStorage implements FilmStorage {
                                 .addValue("filmId", film.getId()))
                         .toArray(SqlParameterSource[]::new)
         );
+        saveDirectorByFilm(film);
     }
 
     @Override
@@ -101,6 +112,17 @@ public class FilmDbStorage implements FilmStorage {
                 actualGenreIds.stream().map(genreId -> new MapSqlParameterSource("genreId", genreId)
                         .addValue("filmId", film.getId())).toArray(SqlParameterSource[]::new)
         );
+        saveDirectorByFilm(film);
+    }
+
+    private void saveDirectorByFilm(Film data) {
+        List<Director> directors = data.getDirectors();
+        directorStorage.deleteAllDirectorByFilm(data.getId());
+        if (directors != null) {
+            for (Director director : directors) {
+                directorStorage.createDirectorByFilm(director.getId(), data.getId());
+            }
+        }
     }
 
     @Override
@@ -115,7 +137,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private void fillFilms(List<Film> films) {
         Map<Integer, Film> filmsMap = films.stream().collect(Collectors.toMap(Film::getId, film -> film, (t, t2) -> t));
-        List<Integer> filmIds = films.stream().map(Film::getId).collect(Collectors.toList());
+        List<Integer> filmIds = films.stream().map(Film::getId).collect(toList());
         List<Map.Entry<Integer, Genre>> filmGenres = jdbcTemplate.query(
                 "select fg.film_id as film_id, g.genre_id as genre_id, g.name as genre_name from FILM_GENRES fg " +
                         "join GENRES g on g.genre_id = fg.genre_id where fg.film_id in (:filmIds)",
@@ -124,6 +146,9 @@ public class FilmDbStorage implements FilmStorage {
         );
         for (Map.Entry<Integer, Genre> entry : filmGenres) {
             Film film = filmsMap.get(entry.getKey());
+            if (film.getGenres() == null) {
+                film.setGenres(new ArrayList<>());
+            }
             film.getGenres().add(entry.getValue());
         }
         List<Map.Entry<Integer, Integer>> filmAppraisers = jdbcTemplate.query(
@@ -133,6 +158,9 @@ public class FilmDbStorage implements FilmStorage {
         );
         for (Map.Entry<Integer, Integer> entry : filmAppraisers) {
             Film film = filmsMap.get(entry.getKey());
+            if (film.getAppraisers() == null) {
+                film.setAppraisers(new HashSet<>());
+            }
             film.getAppraisers().add(entry.getValue());
         }
     }
@@ -217,6 +245,123 @@ public class FilmDbStorage implements FilmStorage {
                         .addValue("filmId", filmId)
         );
     }
+
+    @Override
+    public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
+        String sortName = sort.name();
+        if (sort.equals(SortingFilms.YEAR)) {
+            sortName = sortName + "S";
+        }
+        String sqlQuery = "SELECT f.FILM_ID AS ID ," +
+                "f.name AS name ," +
+                "f.description AS description ," +
+                "f.release_date AS years ," +
+                "f.duration AS duration ," +
+                "f.mpa_id AS mpa_id ," +
+                "mpa.name as mpa_name ," +
+                "d.director_id AS director_id ," +
+                "d.name AS director_name ," +
+                "COUNT( DISTINCT a.USER_ID) AS likes " +
+                "FROM FILMS f left JOIN APPRAISERS a ON a.FILM_ID = f.film_id " +
+                "LEFT join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id " +
+                "LEFT JOIN film_directors fd ON f.FILM_ID = fd.FILM_ID " +
+                "LEFT JOIN DIRECTORS d ON fd.director_id = d.director_id " +
+                "WHERE d.director_id =? " +
+                "GROUP BY ID, director_id " +
+                "ORDER BY " + sortName + " ASC";
+
+        List<Film> films = jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> Film.builder()
+                        .id(rs.getInt("id"))
+                        .name(rs.getString("name"))
+                        .description(rs.getString("description"))
+                        .releaseDate(rs.getTimestamp("years").toLocalDateTime().toLocalDate())
+                        .duration(rs.getInt("duration"))
+                        .mpa(MotionPictureAssociation.builder()
+                                .id(rs.getInt("mpa_id"))
+                                .name(rs.getString("mpa_name"))
+                                .build())
+                        .build(),
+
+                directorId
+        );
+        fillFilms(films);
+        return films;
+    }
+
+    public List<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
+        List<Film> films;
+        String querySyntax = "%" + query + "%";
+        String sqlLastQuery = "SELECT \n" +
+                " f.FILM_ID AS film_id,\n" +
+                "\tf.NAME AS film_name,\n" +
+                "\tf.DESCRIPTION AS film_description,\n" +
+                "\tf.RELEASE_DATE AS film_release_date,\n" +
+                "\tf.DURATION AS film_duration,\n" +
+                "\tg.NAME AS genres,\n" +
+                "\tf.MPA_ID AS mpa_id,\n" +
+                "\tMPA.NAME AS mpa_name,\n" +
+                "\td.NAME AS directors\n" +
+                "FROM FILMS f \n" +
+                "LEFT JOIN MOTION_PICTURE_ASSOCIATIONS mpa ON f.MPA_ID = MPA.MPA_ID\n" +
+                "LEFT JOIN FILM_DIRECTORS fd ON f.FILM_ID = fd.FILM_ID \n" +
+                "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID \n" +
+                "LEFT JOIN APPRAISERS a ON f.FILM_ID = a.FILM_ID\n" +
+                "LEFT JOIN FILM_GENRES fg ON f.FILM_ID = fg.FILM_ID \n" +
+                "LEFT JOIN GENRES g ON fg.GENRE_ID = g.GENRE_ID ";
+        if (by.contains("title") && by.contains("director")) {
+            String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME)  LIKE LOWER(:title)" +
+                    " OR LOWER(d.NAME) LIKE LOWER(:director) " +
+                    "ORDER BY a.FILM_ID DESC";
+            films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
+                            .addValue("title", querySyntax)
+                            .addValue("director", querySyntax),
+                    this::mapToFilm);
+            log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
+        } else if (by.contains("director")) {
+            String sqlQuery = sqlLastQuery + "WHERE LOWER(d.NAME) LIKE LOWER( :director) " +
+                    "ORDER BY a.FILM_ID DESC";
+            films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
+                            .addValue("director", querySyntax),
+                    this::mapToFilm);
+            log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
+        } else if (by.contains("title")) {
+            String sqlQuery = sqlLastQuery + "WHERE LOWER(f.NAME)  LIKE LOWER( :title) " +
+                    "ORDER BY a.FILM_ID DESC";
+            films = jdbcTemplate.query(sqlQuery,
+                    new MapSqlParameterSource()
+                            .addValue("title", querySyntax),
+                    this::mapToFilm);
+            log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
+        } else {
+            throw new NotFoundException("не верно заданы параметры поиска");
+        }
+        fillFilms(films);
+        return films;
+    }
+
+
+    @Override
+    public List<Film> moviesSharedWithFriend(int userId, int friendId) {
+        String sqlQuery = BASE_SELECT +
+                " FROM FILMS f JOIN MOTION_PICTURE_ASSOCIATIONS mpa ON f.MPA_ID=MPA.MPA_ID " +
+                "WHERE FILM_ID IN (SELECT FILM_ID FROM APPRAISERS a2" +
+                " WHERE USER_ID = :userId AND FILM_ID IN (SELECT FILM_ID  FROM APPRAISERS a " +
+                "WHERE USER_ID = :friendId ORDER BY FILM_ID DESC))";
+        List<Film> films = jdbcTemplate.query(sqlQuery,
+                new MapSqlParameterSource()
+                        .addValue("userId", userId)
+                        .addValue("friendId", friendId), this::mapToFilm);
+        return films;
+    }
+
+    @Override
+    public void deleteFilmById(int id) {
+        String sqlQuery = "delete from FILMS where film_id = :filmId";
+        jdbcTemplate.update(sqlQuery, new MapSqlParameterSource().addValue("filmId", id));
+    }
+
+
+}
 
     @Override
     public Collection<Film> getPopularFilms(int count) {
