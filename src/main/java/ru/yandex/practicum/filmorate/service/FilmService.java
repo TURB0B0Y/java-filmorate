@@ -115,7 +115,6 @@ public class FilmService {
         return enrichingDirectorsToFilms(filmStorage.searchMovieByTitleAndDirector(query, by));
     }
 
-
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
         return filmStorage.moviesSharedWithFriend(userId, friendId);
     }
@@ -127,6 +126,7 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilmsByGenreAndYear(int count, int genreId, int year) {
-        return filmStorage.getPopularFilmsByGenreAndYear(count, genreId, year);
+        return enrichingDirectorsToFilms(filmStorage.getPopularFilmsByGenreAndYear(count, genreId, year));
     }
+
 }

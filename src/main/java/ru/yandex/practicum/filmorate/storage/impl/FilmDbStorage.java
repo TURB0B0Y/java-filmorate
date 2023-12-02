@@ -360,9 +360,6 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlQuery, new MapSqlParameterSource().addValue("filmId", id));
     }
 
-
-}
-
     @Override
     public Collection<Film> getPopularFilms(int count) {
         String sqlQuery = BASE_SELECT + ",(select count(1) from APPRAISERS a where a.film_id = f.film_id) " +

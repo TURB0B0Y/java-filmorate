@@ -34,7 +34,6 @@ public class FilmController {
         return film;
     }
 
-
     public static void validateFilm(Film film) {
         try {
             if (film.getName() == null || film.getName().trim().isEmpty())
@@ -86,14 +85,9 @@ public class FilmController {
     public List<Film> getPopularFilms(@RequestParam(value = "count", defaultValue = "10") Integer count,
                                       @RequestParam(value = "genreId", defaultValue = "0") Integer genreId,
                                       @RequestParam(value = "year", defaultValue = "0") Integer year) {
-        if (genreId == 0 && year == 0) {
-            log.info("Запрос на получение списка популярных фильмов count={}", count);
-            return new ArrayList<>(filmService.getPopularFilms(count));
-        } else {
-            log.info("Запрос на получение списка популярных фильмов count={} по году и жанру", count);
-            return filmService.getPopularFilmsByGenreAndYear(count, genreId, year);
-        }
 
+        log.info("Запрос на получение списка популярных фильмов count={} по году и жанру", count);
+        return filmService.getPopularFilmsByGenreAndYear(count, genreId, year);
     }
 
     @GetMapping("/director/{directorId}")
@@ -126,5 +120,4 @@ public class FilmController {
                                              @RequestParam(defaultValue = "title") List<String> by) {
         return filmService.searchMovieByTitleAndDirector(query, by);
     }
-
 }
