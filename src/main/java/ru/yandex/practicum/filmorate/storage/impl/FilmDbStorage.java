@@ -91,7 +91,6 @@ public class FilmDbStorage implements FilmStorage {
                         .addValue("mpaId", film.getMpa().getId())
                         .addValue("filmId", film.getId())
         );
-
         String getFilmGenresQuery = "select genre_id from FILM_GENRES where film_id = :filmId";
         List<Integer> oldGenres = jdbcTemplate.query(
                 getFilmGenresQuery,
@@ -408,22 +407,16 @@ public class FilmDbStorage implements FilmStorage {
                         "ORDER BY f.film_id " +
                         "LIMIT :count";
             } else {
-                sqlQuery = "SELECT m.*, fg.GENRE_ID, ab.count " +
-                        "FROM FILM_GENRES fg " +
-                        "INNER JOIN (SELECT FILM_ID, COUNT(USER_ID) AS count " +
-                        "FROM APPRAISERS a " +
-                        "GROUP BY FILM_ID) as ab ON fg.FILM_ID =ab.FILM_ID " +
-                        "INNER JOIN (" + BASE_SELECT +
-                        " from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id) as m " +
-                        "ON fg.FILM_ID =m.FILM_ID " +
-                        "WHERE EXTRACT(YEAR FROM m.film_release_date)= :year " +
-                        "ORDER BY m.FILM_ID " +
-                        "LIMIT :count";
+                sqlQuery = BASE_SELECT + ", ab.count from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa " +
+                        "on mpa.mpa_id = f.mpa_id " +
+                        "INNER JOIN (SELECT FILM_ID, COUNT(USER_ID) AS count FROM APPRAISERS a GROUP BY FILM_ID) " +
+                        "as ab ON f.FILM_ID =ab.FILM_ID WHERE EXTRACT(YEAR FROM f.release_date)= :year " +
+                        "ORDER BY f.FILM_ID LIMIT :count";
             }
         }
 
         if (genreId != 0 && year != 0) {
-            log.info("Запрос на получение списка популярнёых фильмов по году={} и жанру={} : count={}",
+            log.info("Запрос на получение списка популярных фильмов по году={} и жанру={} : count={}",
                     year, genreId, count);
             if ((jdbcTemplate.queryForObject(genreIdExistQuery,
                     Collections.singletonMap("genreId", genreId), Integer.class) == null) ||
