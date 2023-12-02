@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 
 @Repository
@@ -211,7 +212,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void addAppraiser(int filmId, int userId) {
-        String sqlQuery = "insert into APPRAISERS (user_id, film_id) values (:userId, :filmId)";
+        String sqlQuery = "MERGE INTO APPRAISERS (user_id, film_id) values (:userId, :filmId)";
         jdbcTemplate.update(
                 sqlQuery,
                 new MapSqlParameterSource()
@@ -307,7 +308,7 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN FILM_GENRES fg ON f.FILM_ID = fg.FILM_ID \n" +
                 "LEFT JOIN GENRES g ON fg.GENRE_ID = g.GENRE_ID ";
         if (by.contains("title") && by.contains("director")) {
-            String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME)  LIKE LOWER(:title)" +
+            String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME) LIKE LOWER(:title)" +
                     " OR LOWER(d.NAME) LIKE LOWER(:director) " +
                     "ORDER BY a.FILM_ID DESC";
             films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
@@ -371,10 +372,8 @@ public class FilmDbStorage implements FilmStorage {
 
         if (genreId != 0 && year == 0) {
             log.info("Запрос на получение списка популярных фильмов по жанру={} : count={} ", genreId, count);
-            if ((jdbcTemplate.queryForObject(genreIdExistQuery,
-                    Collections.singletonMap("genreId", genreId), Integer.class) == null) ||
-                    jdbcTemplate.queryForObject(genreIdExistQuery,
-                            Collections.singletonMap("genreId", genreId), Integer.class) == 0) {
+            if (jdbcTemplate.queryForObject(genreIdExistQuery,
+                    Collections.singletonMap("genreId", genreId), Integer.class) != 1)  {
                 throw new NotFoundException("Жанра с ID = %s не существует", genreId);
             }
             if ((jdbcTemplate.queryForList(LIKES_EXIST_QUERY, new MapSqlParameterSource(), Integer.class)).isEmpty()) {
@@ -385,7 +384,7 @@ public class FilmDbStorage implements FilmStorage {
                         "ON fg.FILM_ID =m.FILM_ID " +
                         "WHERE fg.GENRE_ID = :genreId " +
                         "ORDER BY m.FILM_ID DESC " +
-                        "LIMIT 10";
+                        "LIMIT :count";
             } else {
                 sqlQuery = "SELECT m.*, fg.GENRE_ID, ab.count " +
                         "FROM FILM_GENRES fg " +
@@ -424,7 +423,7 @@ public class FilmDbStorage implements FilmStorage {
         }
 
         if (genreId != 0 && year != 0) {
-            log.info("Запрос на получение списка популярных фильмов по году={} и жанру={} : count={}",
+            log.info("Запрос на получение списка популярнёых фильмов по году={} и жанру={} : count={}",
                     year, genreId, count);
             if ((jdbcTemplate.queryForObject(genreIdExistQuery,
                     Collections.singletonMap("genreId", genreId), Integer.class) == null) ||
