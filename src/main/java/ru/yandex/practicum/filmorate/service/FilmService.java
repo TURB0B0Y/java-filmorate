@@ -3,17 +3,17 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
-import ru.yandex.practicum.filmorate.storage.DirectorStorage;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.MotionPictureAssociationStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,8 +26,11 @@ public class FilmService {
     @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
 
+    private final FeedStorage feedStorage;
+
     private final GenreStorage genreStorage;
     private final MotionPictureAssociationStorage motionPictureAssociationStorage;
+
     @Qualifier("directorDbStorage")
     private final DirectorStorage directorStorage;
 
@@ -83,12 +86,15 @@ public class FilmService {
         if (filmStorage.isFilmHasAppraiser(id, userId))
             throw new ConflictException("Пользователь %s уже оценил фильм %s", userId, id);
         filmStorage.addAppraiser(id, userId);
+        feedStorage.createFeed(userId, id, EventType.LIKE, Operation.ADD, Instant.now().toEpochMilli());
     }
 
     public void unLikeFilm(int id, int userId) {
         if (!filmStorage.isFilmHasAppraiser(id, userId))
             throw new NotFoundException("Пользователь %s еще не оценивал фильм %s", userId, id);
         filmStorage.removeAppraiser(id, userId);
+        feedStorage.createFeed(userId, id, EventType.LIKE, Operation.REMOVE, Instant.now().toEpochMilli());
+
     }
 
     public Collection<Film> getPopularFilms(int count) {
