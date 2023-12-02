@@ -43,7 +43,7 @@ public class FilmDbStorage implements FilmStorage {
             " mpa.mpa_id as mpa_id," +
             " mpa.name as mpa_name";
 
-    private static final String LIKES_EXIST_QUERY = "SELECT FILM_ID, COUNT(USER_ID) AS count " +
+    private static final String LIKES_EXIST_QUERY = "SELECT COUNT(USER_ID) AS count " +
             "FROM APPRAISERS a GROUP BY FILM_ID";
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
