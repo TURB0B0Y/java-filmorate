@@ -15,7 +15,7 @@ public interface FilmStorage {
 
     Film getById(int filmId);
 
-    Collection<Film> getPopularFilms(int count);
+    List<Film> getPopularFilms(int count, int genreId, int year);
 
     void addAppraiser(int filmId, int userId);
 
@@ -31,5 +31,4 @@ public interface FilmStorage {
 
     void deleteFilmById(int id);
 
-    List<Film> getPopularFilmsByGenreAndYear(int limit, int genreId, int year);
 }

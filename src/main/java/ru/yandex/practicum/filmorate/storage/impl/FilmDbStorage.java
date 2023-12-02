@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
@@ -339,7 +337,6 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
-
     @Override
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
         String sqlQuery = BASE_SELECT +
@@ -361,24 +358,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getPopularFilms(int count) {
-        String sqlQuery = BASE_SELECT + ",(select count(1) from APPRAISERS a where a.film_id = f.film_id) " +
-                "as filmAppraisers from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id " +
-                "order by filmAppraisers desc limit :count";
-        List<Film> films = jdbcTemplate.query(
-                sqlQuery,
-                new MapSqlParameterSource("count", count),
-                this::mapToFilm);
-        fillFilms(films);
-        System.out.println("films = " + films);
-        return films;
-    }
-
-    /**
-     * метод получения данных о всех популярных фильмах (по кол-ву лайков, по жанру и по году)
-     */
-    @Override
-    public List<Film> getPopularFilmsByGenreAndYear(int count, int genreId, int year) {
+    public List<Film> getPopularFilms(int count, int genreId, int year) {
         String sqlQuery = null;
         String genreIdExistQuery = "select count(name) from GENRES where genre_id = :genreId";
 

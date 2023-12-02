@@ -91,10 +91,6 @@ public class FilmService {
         filmStorage.removeAppraiser(id, userId);
     }
 
-    public Collection<Film> getPopularFilms(int count) {
-        return enrichingDirectorsToFilms(filmStorage.getPopularFilms(count));
-    }
-
     public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
         directorStorage.get(directorId);
         return enrichingDirectorsToFilms(filmStorage.getSortDirectorsOfFilms(directorId, sort));
@@ -125,8 +121,8 @@ public class FilmService {
         filmStorage.deleteFilmById(id);
     }
 
-    public List<Film> getPopularFilmsByGenreAndYear(int count, int genreId, int year) {
-        return enrichingDirectorsToFilms(filmStorage.getPopularFilmsByGenreAndYear(count, genreId, year));
+    public List<Film> getPopularFilms(int count, int genreId, int year) {
+        return enrichingDirectorsToFilms(filmStorage.getPopularFilms(count, genreId, year));
     }
 
 }

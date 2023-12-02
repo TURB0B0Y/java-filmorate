@@ -104,7 +104,7 @@ public class FilmDbStorageTest {
             filmDbStorage.addAppraiser(film.getId(), user.getId());
             film.getAppraisers().add(user.getId());
         }
-        Collection<Film> popularFilms = filmDbStorage.getPopularFilms(1);
+        Collection<Film> popularFilms = filmDbStorage.getPopularFilms(1,0,0);
         assertThat(popularFilms).isNotNull();
         assertThat(popularFilms.isEmpty()).isEqualTo(false);
         assertThat(popularFilms).usingRecursiveComparison().ignoringFields("mpa.name")
