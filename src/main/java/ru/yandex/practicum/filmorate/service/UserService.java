@@ -143,7 +143,7 @@ public class UserService {
 
     public Set<Feed> getFeeds(int id) {
         userStorage.getById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователя %s не существует, удаление невозможно", id));
+                .orElseThrow(() -> new NotFoundException("Пользователя %s не существует", id));
         return feedStorage.getFeeds(id);
     }
 
