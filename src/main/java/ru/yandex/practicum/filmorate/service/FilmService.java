@@ -97,10 +97,6 @@ public class FilmService {
 
     }
 
-    public Collection<Film> getPopularFilms(int count) {
-        return enrichingDirectorsToFilms(filmStorage.getPopularFilms(count));
-    }
-
     public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
         directorStorage.get(directorId);
         return enrichingDirectorsToFilms(filmStorage.getSortDirectorsOfFilms(directorId, sort));
@@ -121,7 +117,6 @@ public class FilmService {
         return enrichingDirectorsToFilms(filmStorage.searchMovieByTitleAndDirector(query, by));
     }
 
-
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
         return filmStorage.moviesSharedWithFriend(userId, friendId);
     }
@@ -131,4 +126,9 @@ public class FilmService {
             throw new NotFoundException("Фильм %s не существует, удаление невозможно", id);
         filmStorage.deleteFilmById(id);
     }
+
+    public List<Film> getPopularFilms(int count, int genreId, int year) {
+        return enrichingDirectorsToFilms(filmStorage.getPopularFilms(count, genreId, year));
+    }
+
 }

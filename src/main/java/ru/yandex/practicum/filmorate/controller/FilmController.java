@@ -13,7 +13,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
-
 @Slf4j
 @RestController
 @RequestMapping("/films")
@@ -69,7 +68,7 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void likeFilm(@PathVariable int id, @PathVariable int userId) {
-        log.info("Посталвен лайк фильму {} от пользователя {}", id, userId);
+        log.info("Поставлен лайк фильму {} от пользователя {}", id, userId);
         filmService.likeFilm(id, userId);
     }
 
@@ -80,9 +79,11 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        log.info("Запрос на получение списка популярных фильмов count={}", count);
-        return filmService.getPopularFilms(count);
+    public List<Film> getPopularFilms(@RequestParam(value = "count", defaultValue = "10") Integer count,
+                                      @RequestParam(value = "genreId", defaultValue = "0") Integer genreId,
+                                      @RequestParam(value = "year", defaultValue = "0") Integer year) {
+        log.info("Запрос на получение списка популярных фильмов count={} по году и жанру", count);
+        return filmService.getPopularFilms(count, genreId, year);
     }
 
     @GetMapping("/director/{directorId}")
@@ -115,5 +116,4 @@ public class FilmController {
                                              @RequestParam(defaultValue = "title") List<String> by) {
         return filmService.searchMovieByTitleAndDirector(query, by);
     }
-
 }

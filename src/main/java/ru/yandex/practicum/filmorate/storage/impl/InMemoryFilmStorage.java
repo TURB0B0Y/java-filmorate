@@ -41,7 +41,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getPopularFilms(int count) {
+    public List<Film> getPopularFilms(int count, int genreId, int year) {
         return films.values().stream()
                 .sorted((o1, o2) -> Integer.compare(o2.getAppraisers().size(), o1.getAppraisers().size()))
                 .limit(count)
