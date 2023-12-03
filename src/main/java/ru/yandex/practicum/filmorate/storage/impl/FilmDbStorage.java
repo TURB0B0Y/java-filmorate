@@ -297,7 +297,8 @@ public class FilmDbStorage implements FilmStorage {
                 "\tg.NAME AS genres,\n" +
                 "\tf.MPA_ID AS mpa_id,\n" +
                 "\tMPA.NAME AS mpa_name,\n" +
-                "\td.NAME AS directors\n" +
+                "\td.NAME AS directors,\n " +
+                "COUNT( DISTINCT a.USER_ID) AS likes " +
                 "FROM FILMS f \n" +
                 "LEFT JOIN MOTION_PICTURE_ASSOCIATIONS mpa ON f.MPA_ID = MPA.MPA_ID\n" +
                 "LEFT JOIN FILM_DIRECTORS fd ON f.FILM_ID = fd.FILM_ID \n" +
@@ -308,7 +309,8 @@ public class FilmDbStorage implements FilmStorage {
         if (by.contains("title") && by.contains("director")) {
             String sqlQuery = sqlLastQuery + " WHERE LOWER(f.NAME) LIKE LOWER(:title)" +
                     " OR LOWER(d.NAME) LIKE LOWER(:director) " +
-                    "ORDER BY a.FILM_ID DESC";
+                    "GROUP BY a.FILM_ID " +
+                    "ORDER BY likes DESC";
             films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
                             .addValue("title", querySyntax)
                             .addValue("director", querySyntax),
@@ -316,14 +318,16 @@ public class FilmDbStorage implements FilmStorage {
             log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
         } else if (by.contains("director")) {
             String sqlQuery = sqlLastQuery + "WHERE LOWER(d.NAME) LIKE LOWER( :director) " +
-                    "ORDER BY a.FILM_ID DESC";
+                    "GROUP BY a.FILM_ID " +
+                    "ORDER BY likes DESC";
             films = jdbcTemplate.query(sqlQuery, new MapSqlParameterSource()
                             .addValue("director", querySyntax),
                     this::mapToFilm);
             log.info("Собрали список через поиск размером в {} элемент(ов)", films.size());
         } else if (by.contains("title")) {
             String sqlQuery = sqlLastQuery + "WHERE LOWER(f.NAME)  LIKE LOWER( :title) " +
-                    "ORDER BY a.FILM_ID DESC";
+                    "GROUP BY a.FILM_ID " +
+                    "ORDER BY likes DESC";
             films = jdbcTemplate.query(sqlQuery,
                     new MapSqlParameterSource()
                             .addValue("title", querySyntax),

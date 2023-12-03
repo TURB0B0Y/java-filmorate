@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.enums.EventType;
 import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.enums.SortingFilms;
-import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -83,8 +82,6 @@ public class FilmService {
     }
 
     public void likeFilm(int id, int userId) {
-        if (filmStorage.isFilmHasAppraiser(id, userId))
-            throw new ConflictException("Пользователь %s уже оценил фильм %s", userId, id);
         filmStorage.addAppraiser(id, userId);
         feedStorage.createFeed(userId, id, EventType.LIKE, Operation.ADD, Instant.now().toEpochMilli());
     }
