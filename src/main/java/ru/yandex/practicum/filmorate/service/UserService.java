@@ -126,12 +126,11 @@ public class UserService {
         userStorage.getById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id %s не найден", userId));
 
-        List<Integer> listFilmId = userStorage.getRecommendations(userId);
+        List<Film> films = filmStorage.getRecommendations(userId);
 
-        if (listFilmId.isEmpty())
+        if (films.isEmpty())
             return Collections.emptyList();
 
-        List<Film> films = listFilmId.stream().map(x -> filmStorage.getById(x)).collect(Collectors.toList());
         return films;
     }
 

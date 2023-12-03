@@ -50,7 +50,7 @@ public class DirectorDbStorage implements DirectorStorage {
             return stmt;
         }, kayHolder);
         data.setId(kayHolder.getKey().intValue());
-        log.debug("Добавлен новый элемент':" + data);
+        log.info("Добавлен новый элемент: {}", data);
         return data;
     }
 
@@ -69,7 +69,7 @@ public class DirectorDbStorage implements DirectorStorage {
         jdbcTemplate.update(sqlQuery,
                 data.getName(),
                 id);
-        log.debug("Элемент обновлен:" + data);
+        log.info("Элемент обновлен: ", data);
         return data;
     }
 
@@ -81,7 +81,7 @@ public class DirectorDbStorage implements DirectorStorage {
                 "WHERE director_id = ?";
         jdbcTemplate.update(sqlQuery,
                 directorId);
-        log.debug("Директор удален с id: " + directorId);
+        log.info("Директор с id {} удален", directorId);
     }
 
     public void deleteAllDirectorByFilm(int filmId) {
@@ -89,7 +89,7 @@ public class DirectorDbStorage implements DirectorStorage {
 
         int count = jdbcTemplate.update(sqlQuery,
                 filmId);
-        log.debug(String.format("Удалены %s элементов'", count));
+        log.info(String.format("Удалено {} элементов'", count));
     }
 
     public void createDirectorByFilm(int directorId, int filmId) {
@@ -99,10 +99,10 @@ public class DirectorDbStorage implements DirectorStorage {
         jdbcTemplate.update(sqlQuery,
                 directorId,
                 filmId);
-        log.debug("Добавлен новый элемент'");
+        log.info("Фильму {} добавлен новый директор {}", filmId, directorId);
     }
 
-    public List<Director> getDirectorIdsForFilmId(int filmId) {
+    public List<Director> getDirectorsForFilmId(int filmId) {
         String sqlQuery = "SELECT d.director_id , d.NAME " +
                 "FROM film_directors fd " +
                 "LEFT JOIN FILMS f ON fd.FILM_ID = f.FILM_ID " +

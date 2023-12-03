@@ -82,4 +82,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     public void deleteFilmById(int id) {
         throw new UnsupportedOperationException("Функция пока не реализована");
     }
+
+    @Override
+    public List<Film> getRecommendations(int userId) {
+        throw new UnsupportedOperationException("Функция пока не реализована");
+    }
 }

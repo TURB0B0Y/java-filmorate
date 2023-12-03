@@ -22,6 +22,5 @@ public class Film {
     private Set<Integer> appraisers = new HashSet<>();
     private List<Genre> genres = new LinkedList<>();
     private MotionPictureAssociation mpa;
-
-    private List<Director> directors;
+    private List<Director> directors = new LinkedList<>();
 }

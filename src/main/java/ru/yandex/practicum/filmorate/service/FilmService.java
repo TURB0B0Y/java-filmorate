@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
 import ru.yandex.practicum.filmorate.storage.*;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -70,14 +69,14 @@ public class FilmService {
     }
 
     public Collection<Film> getAll() {
-        return enrichingDirectorsToFilms(filmStorage.getAll());
+        return filmStorage.getAll();
     }
 
     public Film getFilmById(int filmId) {
         Film film = filmStorage.getById(filmId);
         if (film == null)
             throw new NotFoundException("Фильм с id %s не найден", filmId);
-        film.setDirectors(directorStorage.getDirectorIdsForFilmId(filmId));
+        film.setDirectors(directorStorage.getDirectorsForFilmId(filmId));
         return film;
     }
 
@@ -96,22 +95,11 @@ public class FilmService {
 
     public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
         directorStorage.get(directorId);
-        return enrichingDirectorsToFilms(filmStorage.getSortDirectorsOfFilms(directorId, sort));
-    }
-
-    private List<Film> enrichingDirectorsToFilms(Collection<Film> films) {
-        List<Film> fullFilms = new ArrayList<>();
-        if (films != null) {
-            for (Film film : films) {
-                film.setDirectors(directorStorage.getDirectorIdsForFilmId(film.getId()));
-                fullFilms.add(film);
-            }
-        }
-        return fullFilms;
+        return filmStorage.getSortDirectorsOfFilms(directorId, sort);
     }
 
     public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
-        return enrichingDirectorsToFilms(filmStorage.searchMovieByTitleAndDirector(query, by));
+        return filmStorage.searchMovieByTitleAndDirector(query, by);
     }
 
     public List<Film> moviesSharedWithFriend(int userId, int friendId) {
@@ -125,7 +113,7 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(int count, int genreId, int year) {
-        return enrichingDirectorsToFilms(filmStorage.getPopularFilms(count, genreId, year));
+        return filmStorage.getPopularFilms(count, genreId, year);
     }
 
 }

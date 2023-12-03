@@ -135,6 +135,7 @@ public class FilmDbStorage implements FilmStorage {
     private void fillFilms(List<Film> films) {
         Map<Integer, Film> filmsMap = films.stream().collect(Collectors.toMap(Film::getId, film -> film, (t, t2) -> t));
         List<Integer> filmIds = films.stream().map(Film::getId).collect(toList());
+
         List<Map.Entry<Integer, Genre>> filmGenres = jdbcTemplate.query(
                 "select fg.film_id as film_id, g.genre_id as genre_id, g.name as genre_name from FILM_GENRES fg " +
                         "join GENRES g on g.genre_id = fg.genre_id where fg.film_id in (:filmIds)",
@@ -148,6 +149,7 @@ public class FilmDbStorage implements FilmStorage {
             }
             film.getGenres().add(entry.getValue());
         }
+
         List<Map.Entry<Integer, Integer>> filmAppraisers = jdbcTemplate.query(
                 "select * from APPRAISERS where film_id in (:filmIds)",
                 new MapSqlParameterSource("filmIds", filmIds),
@@ -159,6 +161,20 @@ public class FilmDbStorage implements FilmStorage {
                 film.setAppraisers(new HashSet<>());
             }
             film.getAppraisers().add(entry.getValue());
+        }
+
+        List<Map.Entry<Integer, Director>> filmDirectors = jdbcTemplate.query(
+                "select fd.film_id as film_id, d.director_id as director_id, d.name as name from FILM_DIRECTORS fd " +
+                        "join DIRECTORS d on d.director_id = fd.director_id where fd.film_id in (:filmIds)",
+                new MapSqlParameterSource("filmIds", filmIds),
+                this::mapToFilmDirector
+        );
+        for (Map.Entry<Integer, Director> entry : filmDirectors) {
+            Film film = filmsMap.get(entry.getKey());
+            if (film.getDirectors() == null) {
+                film.setDirectors(new ArrayList<>());
+            }
+            film.getDirectors().add(entry.getValue());
         }
     }
 
@@ -174,6 +190,14 @@ public class FilmDbStorage implements FilmStorage {
         genre.setId(rs.getInt("genre_id"));
         genre.setName(rs.getString("genre_name"));
         return new AbstractMap.SimpleEntry<>(filmId, genre);
+    }
+
+    private Map.Entry<Integer, Director> mapToFilmDirector(ResultSet rs, int i) throws SQLException {
+        int filmId = rs.getInt("film_id");
+        Director director = new Director();
+        director.setId(rs.getInt("director_id"));
+        director.setName(rs.getString("name"));
+        return new AbstractMap.SimpleEntry<>(filmId, director);
     }
 
     private Film mapToFilm(ResultSet rs, int i) throws SQLException {
@@ -375,7 +399,7 @@ public class FilmDbStorage implements FilmStorage {
         if (genreId != 0 && year == 0) {
             log.info("Запрос на получение списка популярных фильмов по жанру={} : count={} ", genreId, count);
             if (jdbcTemplate.queryForObject(genreIdExistQuery,
-                    Collections.singletonMap("genreId", genreId), Integer.class) != 1)  {
+                    Collections.singletonMap("genreId", genreId), Integer.class) != 1) {
                 throw new NotFoundException("Жанра с ID = %s не существует", genreId);
             }
             if ((jdbcTemplate.queryForList(LIKES_EXIST_QUERY, new MapSqlParameterSource(), Integer.class)).isEmpty()) {
@@ -455,6 +479,36 @@ public class FilmDbStorage implements FilmStorage {
                         .addValue("genreId", genreId)
                         .addValue("year", year)
                         .addValue("count", count),
+                this::mapToFilm
+        );
+        fillFilms(films);
+        return films;
+    }
+
+    @Override
+    public List<Film> getRecommendations(int userId) {
+        String sqlQuery = "select" +
+                " f.film_id as film_id," +
+                " f.name as film_name," +
+                " f.description as film_description," +
+                " f.release_date as film_release_date," +
+                " f.duration as film_duration," +
+                " mpa.mpa_id as mpa_id," +
+                " mpa.name as mpa_name " +
+                " from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id " +
+                " left join APPRAISERS ap on ap.film_id = f.film_id " +
+                " where  f.film_id in (select film_id from APPRAISERS where user_id = (" +
+        "select user_id from APPRAISERS where film_id in (" +
+                "select film_id from APPRAISERS where user_id = :userId) " +
+                "and user_id <> :userId " +
+                "group by user_id order by count(*) desc limit 1" +
+                ") " +
+                "except " +
+                "select film_id from APPRAISERS where user_id = :userId);";
+
+        List<Film> films = jdbcTemplate.query(
+                sqlQuery, new MapSqlParameterSource()
+                        .addValue("userId", userId),
                 this::mapToFilm
         );
         fillFilms(films);

@@ -31,4 +31,6 @@ public interface FilmStorage {
 
     void deleteFilmById(int id);
 
+    List<Film> getRecommendations(int userId);
+
 }
