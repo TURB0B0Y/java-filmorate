@@ -497,14 +497,14 @@ public class FilmDbStorage implements FilmStorage {
                 " mpa.name as mpa_name " +
                 " from FILMS f join MOTION_PICTURE_ASSOCIATIONS mpa on mpa.mpa_id = f.mpa_id " +
                 " left join APPRAISERS ap on ap.film_id = f.film_id " +
-                " where  f.film_id in (select film_id from APPRAISERS where user_id = (" +
-        "select user_id from APPRAISERS where film_id in (" +
+                " where  f.film_id in (select film_id from APPRAISERS where user_id in (" +
+                "select user_id from APPRAISERS where film_id in (" +
                 "select film_id from APPRAISERS where user_id = :userId) " +
                 "and user_id <> :userId " +
                 "group by user_id order by count(*) desc limit 1" +
                 ") " +
                 "except " +
-                "select film_id from APPRAISERS where user_id = :userId);";
+                "select film_id from APPRAISERS where user_id = :userId)";
 
         List<Film> films = jdbcTemplate.query(
                 sqlQuery, new MapSqlParameterSource()
