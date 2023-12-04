@@ -89,16 +89,8 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public List<Integer> getRecommendations(int userId) {
-        String sqlQuery = "select film_id from APPRAISERS where user_id = (" + // забираем список ид фильмов для рекомендации
-                "select user_id from APPRAISERS where film_id in (" + // сравниваем лайки др юзеров с нашим
-                "select film_id from APPRAISERS where user_id = :userId) " +
-                "and user_id <> :userId " + // не сравниваем с самим собой
-                "group by user_id order by count(*) desc limit 1" + // выбираем юзера с мах совпадением
-                ") " +
-                "except " + // исключаем всё, что есть у нашего юзера
-                "select film_id from APPRAISERS where user_id = :userId;";
-        return jdbcTemplate.queryForList(sqlQuery,
-                new MapSqlParameterSource().addValue("userId", userId),Integer.class);
+    public void deleteUserById(int id) {
+        String sqlQuery = "delete from USERS where user_id = :userId";
+        jdbcTemplate.update(sqlQuery, new MapSqlParameterSource().addValue("userId", id));
     }
 }

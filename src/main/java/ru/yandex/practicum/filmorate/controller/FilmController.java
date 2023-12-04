@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -66,7 +68,7 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void likeFilm(@PathVariable int id, @PathVariable int userId) {
-        log.info("Посталвен лайк фильму {} от пользователя {}", id, userId);
+        log.info("Поставлен лайк фильму {} от пользователя {}", id, userId);
         filmService.likeFilm(id, userId);
     }
 
@@ -77,8 +79,41 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        log.info("Запрос на получение списка популярных фильмов count={}", count);
-        return filmService.getPopularFilms(count);
+    public List<Film> getPopularFilms(@RequestParam(value = "count", defaultValue = "10") Integer count,
+                                      @RequestParam(value = "genreId", defaultValue = "0") Integer genreId,
+                                      @RequestParam(value = "year", defaultValue = "0") Integer year) {
+        log.info("Запрос на получение списка популярных фильмов count={} по году и жанру", count);
+        return filmService.getPopularFilms(count, genreId, year);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> getFilmsByDirector(@PathVariable int directorId,
+                                               @RequestParam String sortBy) {
+        SortingFilms sort;
+        try {
+            sort = SortingFilms.valueOf(sortBy.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Неверно указан параметр");
+        }
+        log.info("запрос на получение сортированного списка фильмов по {} ", sortBy);
+        return filmService.getSortDirectorsOfFilms(directorId, sort);
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> moviesSharedWithFriend(@RequestParam int userId, @RequestParam int friendId) {
+        log.info("запрос на получение общих фильмов с другом");
+        return filmService.moviesSharedWithFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{filmId}")
+    public void deleteFilmById(@PathVariable int filmId) {
+        log.info("Удаляется фильм {}", filmId);
+        filmService.deleteFilmById(filmId);
+    }
+
+    @GetMapping("/search")
+    public Collection<Film> getSearchResults(@RequestParam String query,
+                                             @RequestParam(defaultValue = "title") List<String> by) {
+        return filmService.searchMovieByTitleAndDirector(query, by);
     }
 }

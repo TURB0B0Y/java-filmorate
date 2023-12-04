@@ -2,11 +2,14 @@ package ru.yandex.practicum.filmorate.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.yandex.practicum.filmorate.dto.ResponseDTO;
+
+import javax.validation.ConstraintViolationException;
 
 @Slf4j
 @ControllerAdvice
@@ -26,8 +29,20 @@ public class CustomExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseDTO<String> handle(ConstraintViolationException e) {
+        return new ResponseDTO<>(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ValidationException.class)
     public ResponseDTO<String> handle(ValidationException e) {
+        return new ResponseDTO<>(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseDTO<String> handle(MethodArgumentNotValidException e) {
         return new ResponseDTO<>(e.getMessage());
     }
 

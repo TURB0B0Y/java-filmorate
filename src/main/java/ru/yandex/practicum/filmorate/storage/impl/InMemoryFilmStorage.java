@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -39,7 +41,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getPopularFilms(int count) {
+    public List<Film> getPopularFilms(int count, int genreId, int year) {
         return films.values().stream()
                 .sorted((o1, o2) -> Integer.compare(o2.getAppraisers().size(), o1.getAppraisers().size()))
                 .limit(count)
@@ -59,5 +61,30 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void removeAppraiser(int filmId, int userId) {
         films.get(filmId).getAppraisers().remove(userId);
+    }
+
+    @Override
+    public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
+        throw new UnsupportedOperationException("Функция пока не реализована");
+    }
+
+    @Override
+    public List<Film> moviesSharedWithFriend(int userId, int friendId) {
+        throw new UnsupportedOperationException("Функция пока не реализована");
+    }
+
+    @Override
+    public void deleteFilmById(int id) {
+        throw new UnsupportedOperationException("Функция пока не реализована");
+    }
+
+    @Override
+    public List<Film> getRecommendations(int userId) {
+        throw new UnsupportedOperationException("Функция пока не реализована");
     }
 }

@@ -3,18 +3,18 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ConflictException;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
+import ru.yandex.practicum.filmorate.enums.SortingFilms;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.MotionPictureAssociationStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 
+import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,10 +24,13 @@ public class FilmService {
     @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
 
-    @Qualifier("userDbStorage")
-    private final UserStorage userStorage;
+    private final FeedStorage feedStorage;
+
     private final GenreStorage genreStorage;
     private final MotionPictureAssociationStorage motionPictureAssociationStorage;
+
+    @Qualifier("directorDbStorage")
+    private final DirectorStorage directorStorage;
 
     public void addFilm(Film film) {
         setMPA(film);
@@ -53,6 +56,7 @@ public class FilmService {
         filmFromDB.setReleaseDate(film.getReleaseDate());
         setGenres(film);
         filmFromDB.setGenres(film.getGenres());
+        filmFromDB.setDirectors(film.getDirectors());
         filmStorage.editFilm(filmFromDB);
         return filmFromDB;
     }
@@ -68,31 +72,48 @@ public class FilmService {
         return filmStorage.getAll();
     }
 
-    private User getUserById(int userId) {
-        return userStorage.getById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id %s не найден", userId));
-    }
-
     public Film getFilmById(int filmId) {
         Film film = filmStorage.getById(filmId);
         if (film == null)
             throw new NotFoundException("Фильм с id %s не найден", filmId);
+        film.setDirectors(directorStorage.getDirectorsForFilmId(filmId));
         return film;
     }
 
     public void likeFilm(int id, int userId) {
-        if (filmStorage.isFilmHasAppraiser(id, userId))
-            throw new ConflictException("Пользователь %s уже оценил фильм %s", userId, id);
         filmStorage.addAppraiser(id, userId);
+        feedStorage.createFeed(userId, id, EventType.LIKE, Operation.ADD, Instant.now().toEpochMilli());
     }
 
     public void unLikeFilm(int id, int userId) {
         if (!filmStorage.isFilmHasAppraiser(id, userId))
             throw new NotFoundException("Пользователь %s еще не оценивал фильм %s", userId, id);
         filmStorage.removeAppraiser(id, userId);
+        feedStorage.createFeed(userId, id, EventType.LIKE, Operation.REMOVE, Instant.now().toEpochMilli());
+
     }
 
-    public Collection<Film> getPopularFilms(int count) {
-        return filmStorage.getPopularFilms(count);
+    public List<Film> getSortDirectorsOfFilms(int directorId, SortingFilms sort) {
+        directorStorage.get(directorId);
+        return filmStorage.getSortDirectorsOfFilms(directorId, sort);
     }
+
+    public Collection<Film> searchMovieByTitleAndDirector(String query, List<String> by) {
+        return filmStorage.searchMovieByTitleAndDirector(query, by);
+    }
+
+    public List<Film> moviesSharedWithFriend(int userId, int friendId) {
+        return filmStorage.moviesSharedWithFriend(userId, friendId);
+    }
+
+    public void deleteFilmById(int id) {
+        if (filmStorage.getById(id) == null)
+            throw new NotFoundException("Фильм %s не существует, удаление невозможно", id);
+        filmStorage.deleteFilmById(id);
+    }
+
+    public List<Film> getPopularFilms(int count, int genreId, int year) {
+        return filmStorage.getPopularFilms(count, genreId, year);
+    }
+
 }
